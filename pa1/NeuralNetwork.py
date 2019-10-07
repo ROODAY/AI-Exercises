@@ -154,15 +154,15 @@ def train(XTrain, YTrain, args):
       This should be the trained NN object.
   """
   # 1. Initializes a network object with given args.
-  
+  model = NeuralNetwork(args[0], args[1], args[2])
   
   # 2. Train the model with the function "fit".
   # (hint: use the plotDecisionBoundary function to visualize after training)
-  
+  model.fit(XTrain, YTrain, learningRate, epochs, regLambda)
+  plotDecisionBoundary(XTrain, YTrain)
   
   # 3. Return the model.
-  
-  pass
+  return model
 
 def test(XTest, model):
   """
