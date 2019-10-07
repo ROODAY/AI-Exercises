@@ -184,7 +184,21 @@ def getConfusionMatrix(YTrue, YPredict):
     CM : numpy matrix
         The confusion matrix.
     """
-    pass
+    TP, FP, FN, TN = 0, 0, 0, 0
+    for i in range(len(YTrue)):
+        if YTrue[i] == YPredict[i]:
+            if YTrue[i] == 1:
+                TP+= 1
+            else:
+                TN+= 1
+        else:
+            if YTrue[i] == 1:
+                FP+= 1
+            else:
+                FN+= 1
+    CM = np.matrix([[TN, FN], [FP, TP]])
+    
+    return CM
     
 def getPerformanceScores(YTrue, YPredict):
     """
