@@ -226,7 +226,22 @@ def getPerformanceScores(YTrue, YPredict):
   "f1" : float}
       This should be a dictionary.
   """
-  pass
+  cm = getConfusionMatrix(YTrue, YPredict) 
+  d = {} 
+  TP = cm[0][0]
+  TN = cm[1][1]
+  FP = cm[0][1]
+  FN = cm[1][0] 
+  Precision = float (TP /(TP+FP)) 
+  Recall = float(TP/(TP+FN))
+  Accuracy = float((TP +TN) / (TP + TN + FP + FN))
+  F1 = (2*Recall*Precision)/ (Recall + Precision) 
+  d["CM"] = cm 
+  d["accuracy"] = Accuracy 
+  d["precision"] = Precision 
+  d["recall"] = Recall 
+  d["f1"] = F1
+  return d
 
 X, Y = getData('Data/dataset1')
 splits = splitData(X, Y)
