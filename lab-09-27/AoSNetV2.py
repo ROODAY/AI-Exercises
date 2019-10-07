@@ -13,11 +13,14 @@ class NeuralNetwork:
 
     def predict(self, X):
         outputs = self.forward(X)
+        print("outputs", outputs)
         YPredict = outputs.argmax(axis = 1)
         return YPredict
 
     def forward(self, X):
+        print('first activate: {} x {}'.format(X, self.Ws[0]))
         outputP = self.activate(X * self.Ws[0], self.Ts[0])
+        print('second activate: {} x {}'.format(outputP, self.Ws[1]))
         outputM = self.activate(outputP * self.Ws[1], self.Ts[1])
         return outputM
         

@@ -6,7 +6,16 @@ class NeuralNetwork:
     self.NNodes = NNodes # the number of nodes in the hidden layer
     self.activate = activate # a function used to activate
     self.deltaActivate = deltaActivate # the derivative of activate
-    
+
+  def test(self, X):
+    # Layer 1 Input = [a, b, ..., BIAS], shape = X.shape[1] + 1,)
+    # Layer 1 Weights should be shape (NNodes, X.shape[1] + 1) to output shape (NNodes, 1)
+    self.W1 = np.random.rand(self.NNodes, X.shape[1] + 1)
+
+    # Layer 2 Input = [...NNodes, BIAS], shape = (NNodes + 1,)
+    # Layer 2 Weights should be shape (1, NNodes + 1) to output shape (1, 1)
+    self.W2 = np.random.rand(1, self.NNodes + 1)
+
   def fit(self, X, Y, learningRate, epochs, regLambda):
     """
     This function is used to train the model.
@@ -29,6 +38,10 @@ class NeuralNetwork:
     # Layer 2 Weights should be shape (1, NNodes + 1) to output shape (1, 1)
     self.W2 = np.random.rand(1, self.NNodes + 1)
     
+    for e in range(epochs):
+      for i in range(len(X)):
+        self.forward(X[i])
+        self.backpropagate()
     
     # For each epoch, do
         # For each training sample (X[i], Y[i]), do
@@ -52,15 +65,15 @@ class NeuralNetwork:
         The predictions of X.
     ----------
     """
-    outputs = self.forward(X)
-    YPredict = outputs.argmax(axis = 1)
-    return YPredict
+    return self.forward(X)
 
   def forward(self, X):
     # Perform matrix multiplication and activation twice (one for each layer).
     # (hint: add a bias term before multiplication)
-    hidden_layer_output = self.activate(self.W1 * (X + [1]))
-    output_layer_output = self.activate(self.W2 * hidden_layer_output)
+    X_biased = np.hstack((X, 1))
+    l1_output = self.activate(np.dot(self.W1, X_biased))
+    l1_biased = np.hstack((l1_output, 1))
+    output_layer_output = self.activate(np.dot(self.W2, l1_biased))
     return output_layer_output
       
   def backpropagate(self):
@@ -157,7 +170,6 @@ def train(XTrain, YTrain, args):
   model = NeuralNetwork(args[0], args[1], args[2])
   
   # 2. Train the model with the function "fit".
-  # (hint: use the plotDecisionBoundary function to visualize after training)
   model.fit(XTrain, YTrain, learningRate, epochs, regLambda)
   plotDecisionBoundary(XTrain, YTrain)
   
@@ -245,3 +257,16 @@ def getPerformanceScores(YTrue, YPredict):
 
 X, Y = getData('Data/dataset1')
 splits = splitData(X, Y)
+
+def activate(x):
+  print("Activate Called on shape {}".format(x.shape))
+  print(x)
+  return 1
+
+def sigmoid(X):
+  return 1.0/(1.0 + np.exp(-X))
+
+model = NeuralNetwork(5, sigmoid, 1)
+model.test(X)
+pre = model.predict(X[0])
+print(pre)
