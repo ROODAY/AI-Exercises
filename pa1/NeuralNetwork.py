@@ -80,12 +80,12 @@ def getData(dataDir):
     Y : numpy array
         Input data labels.
     '''
-    # TO-DO for this part:
-    # Use your preferred method to read the csv files.
-    # Write your codes here:
+
+    X = np.genfromtxt('{}/LinearX.csv'.format(dataDir), delimiter=',')
+    Y = np.genfromtxt('{}/LinearY.csv'.format(dataDir), delimiter=',')
+    print('X.shape: {}'.format(X.shape))
+    print('Y.shape: {}'.format(Y.shape))
     
-    
-    # Hint: use print(X.shape) to check if your results are valid.
     return X, Y
 
 def splitData(X, Y, K = 5):
@@ -99,9 +99,17 @@ def splitData(X, Y, K = 5):
         sample in the data is used for testing while the 0th, 1st, 2nd, and 3rd samples
         are for training.
     '''
-    
-    # Make sure you shuffle each train list.
-    pass
+    # Get a list of K numpy arrays, where each array contains unique indices
+    folds = np.array_split([i for i in range(len(Y))], K)
+
+    splits = []
+    for i in range(len(folds)):
+      test = folds[i].tolist() # Isolate one fold as test set
+      train = np.concatenate(folds[:i] + folds[i+1:]).tolist() # Concatenate other folds as train set
+      np.random.shuffle(train) # Shuffle train set
+      splits.append([train, test])
+
+    return splits
 
 def plotDecisionBoundary(model, X, Y):
     """
@@ -196,3 +204,6 @@ def getPerformanceScores(YTrue, YPredict):
         This should be a dictionary.
     """
     pass
+
+X, Y = getData('Data/dataset1')
+splits = splitData(X, Y)
