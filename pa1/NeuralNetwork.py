@@ -1,6 +1,8 @@
 import numpy as np
 import os, sys
 import math 
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 def softmax(X):
   e_x = np.exp(X - np.max(X))
@@ -17,6 +19,12 @@ def sigmoid(X):
 def delta_sigmoid(X):
   f = sigmoid(X)
   return f * (1 - f)
+
+def tanh(X):
+  return np.tanh(X)
+
+def delta_tanh(X):
+  return 1 - np.square(tanh(X))
 
 class NeuralNetwork:
   def __init__(self, HNodes, ONodes, activate, deltaActivate):
@@ -50,7 +58,7 @@ class NeuralNetwork:
 
     self.initWeights(X)
     
-    for e in range(epochs):
+    for e in tqdm(range(epochs), desc='Epochs'):
       for i in range(len(X)): #for f, b in zip(foo, bar):
         YPredict = self.forward(X[i])
         self.backpropagate(X[i], Y[i], YPredict, learningRate)
@@ -67,8 +75,7 @@ class NeuralNetwork:
         The predictions of X.
     ----------
     """
-    YPredict = [self.forward(sample).argmax() for sample in X]
-    return YPredict
+    return np.array([self.forward(sample).argmax() for sample in tqdm(X, desc="Predict")])
 
   def forward(self, X):
     # Perform matrix multiplication and activation twice (one for each layer).
@@ -90,33 +97,43 @@ class NeuralNetwork:
   def backpropagate(self, X, YTrue, YPredict, learningRate):
     # https://dev.to/shamdasani/build-a-flexible-neural-network-with-backpropagation-in-python
 
-    Y = [0] * self.ONodes
+    Y = np.zeros(self.ONodes)
     Y[int(YTrue)] = 1
-    Y = np.array(Y)
 
     # calculate change for W2
     dCost_dOutput = YPredict - Y
     dOutput_dZ2 = delta_softmax(self.Z2)
-    dZ2_dW2 = self.X2
-    dCost_dW2 = np.dot(np.dot(dCost_dOutput, dOutput_dZ2)[:, np.newaxis], dZ2_dW2[:, np.newaxis].T)
-    #print(dCost_dW2.shape)
+    dCost_dZ2 = np.dot(dCost_dOutput, dOutput_dZ2)[:, np.newaxis]
+    dZ2_dW2 = self.X2[:, np.newaxis]
+    dCost_dW2 = np.dot(dCost_dZ2, dZ2_dW2.T)
+
+    # [a1|1] * W2 = Z2
+    # cost(Z2) = ...
+    # dcost / dz2 = dCost_dZ2
 
     # calculate change for W1
-    dCost_dA1 = 1
-    dA1_dZ1 = self.deltaActivate(self.Z1)
-    dZ1_dW1 = self.X1
-    dCost_dW1 = 1
+    #print('\n\nW2 shape: {}, dCost_dZ2 shape: {}'.format(self.W2.shape, dCost_dZ2.shape))
+    dCost_dA1 = sum(np.dot(self.W2, dCost_dZ2))
+    #print('\n\ndCost_dA1 shape: {}'.format(dCost_dA1.shape))
+    dA1_dZ1 = self.deltaActivate(self.Z1)[:, np.newaxis]
+    #print('dA1_dZ1 shape: {}'.format(dA1_dZ1.shape))
+    dCost_dZ1 = np.dot(dCost_dA1, dA1_dZ1.T)[:, np.newaxis]
+    #print('dCost_dZ1 shape: {}'.format(dCost_dZ1.shape))
+    dZ1_dW1 = self.X1[:, np.newaxis]
+    #print('dZ1_dW1 shape: {}'.format(dZ1_dW1.shape))
+    dCost_dW1 = np.dot(dCost_dZ1, dZ1_dW1.T)
+    #print('dCost_dW1 shape: {}'.format(dCost_dW1.shape))
 
-    self.W1 = self.W1 - dCost_dW1 * learningRate
+    self.W1 = self.W1 - dCost_dW1.T * learningRate
     self.W2 = self.W2 - dCost_dW2.T * learningRate
     return
     
       
-  def getCost(self, YTrue, YPredict):
+  def getCost(self, YTrue, YPredict, regLambda):
     # Compute loss / cost in terms of crossentropy.
     # (hint: your regularization term should appear here)
     # https://ml-cheatsheet.readthedocs.io/en/latest/loss_functions.html
-    return -1 * math.log(YPredict[int(YTrue)])
+    return -1 * math.log(YPredict[int(YTrue)]) + (regLambda / (2 * self.ONodes)) * (np.sum(np.square(self.W1)) + np.sum(np.square(self.W2)))
 
 def getData(XPath, YPath):
   '''
@@ -130,8 +147,8 @@ def getData(XPath, YPath):
 
   X = np.genfromtxt(XPath, delimiter=',')
   Y = np.genfromtxt(YPath, delimiter=',')
-  print('X.shape: {}'.format(X.shape))
-  print('Y.shape: {}'.format(Y.shape))
+  #print('X.shape: {}'.format(X.shape))
+  #print('Y.shape: {}'.format(Y.shape))
   
   return X, Y
 
@@ -172,7 +189,7 @@ def plotDecisionBoundary(model, X, Y):
   Z = model.predict(grid_coordinates)
   Z = Z.reshape(x1_array.shape)
   plt.contourf(x1_array, x2_array, Z, cmap=plt.cm.bwr)
-  plt.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.bwr)
+  plt.scatter(X[:, 0], X[:, 1], c=Y, cmap=plt.cm.bwr)
   plt.show()
 
 def train(XTrain, YTrain, args):
@@ -191,12 +208,16 @@ def train(XTrain, YTrain, args):
   NN : NeuralNetwork object
       This should be the trained NN object.
   """
+
   # 1. Initializes a network object with given args.
-  model = NeuralNetwork(args[0], args[1], args[2])
+  HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda = args
+  model = NeuralNetwork(HNodes, ONodes, activate, deltaActivate)
   
   # 2. Train the model with the function "fit".
+  print("Train Model")
   model.fit(XTrain, YTrain, learningRate, epochs, regLambda)
-  plotDecisionBoundary(XTrain, YTrain)
+  #print("Plot decision boundary")
+  #plotDecisionBoundary(model, XTrain, YTrain)
   
   # 3. Return the model.
   return model
@@ -280,39 +301,74 @@ def getPerformanceScores(YTrue, YPredict):
   d["f1"] = F1
   return d
 
+'''print("Linear Data Tests")
 X, Y = getData('Data/dataset1/LinearX.csv', 'Data/dataset1/LinearY.csv')
 splits = splitData(X, Y)
-train_set = splits[0][0]
-XTrain = []
-YTrain = []
-for index in train_set:
-  XTrain.append(X[index])
-  YTrain.append(Y[index])
 
-XTrain = np.array(XTrain)
-YTrain = np.array(YTrain)
+HNodes = 5
+ONodes = 2
+activate = sigmoid
+deltaActivate = delta_sigmoid
+learningRate = 1
+epochs = 50
+regLambda = 1
+args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
 
-test_set = splits[0][1]
-XTest = []
-YTest = []
-for index in test_set:
-  XTest.append(X[index])
-  YTest.append(Y[index])
+for i, split in enumerate(splits):
+  print('Beginning Split {}'.format(i+1))
+  train_set = split[0]
+  XTrain = np.array([X[index] for index in train_set])
+  YTrain = np.array([Y[index] for index in train_set])
+  model = train(XTrain, YTrain, args)
 
-XTest = np.array(XTest)
-YTest = np.array(YTest)
+  test_set = split[1]
+  XTest = np.array([X[index] for index in test_set])
+  YTest = np.array([Y[index] for index in test_set])
+  predicts = test(XTest, model)
+  accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
+  print('Split {} Accuracy: {}\n'.format(i+1, accuracy))
 
-model = NeuralNetwork(5, 2, sigmoid, delta_sigmoid)
-model.initWeights(XTrain)
+print("Nonlinear Data Tests")
+X, Y = getData('Data/dataset1/NonlinearX.csv', 'Data/dataset1/NonlinearY.csv')
+splits = splitData(X, Y)
 
+HNodes = 5
+ONodes = 2
+activate = sigmoid
+deltaActivate = delta_sigmoid
+learningRate = 1
+epochs = 50
+regLambda = 1
+args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
+
+for i, split in enumerate(splits):
+  print('Beginning Split {}'.format(i+1))
+  train_set = split[0]
+  XTrain = np.array([X[index] for index in train_set])
+  YTrain = np.array([Y[index] for index in train_set])
+  model = train(XTrain, YTrain, args)
+
+  test_set = split[1]
+  XTest = np.array([X[index] for index in test_set])
+  YTest = np.array([Y[index] for index in test_set])
+  predicts = test(XTest, model)
+  accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
+  print('Split {} Accuracy: {}\n'.format(i+1, accuracy))
+'''
+print("Digit Data Tests")
+XTrain, YTrain = getData('Data/dataset2/Digit_X_train.csv', 'Data/dataset2/Digit_y_train.csv')
+XTest, YTest = getData('Data/dataset2/Digit_X_test.csv', 'Data/dataset2/Digit_y_test.csv')
+
+HNodes = 7
+ONodes = 10
+activate = sigmoid
+deltaActivate = delta_sigmoid
+learningRate = 1.25
+epochs = 50
+regLambda = 1
+args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
+
+model = train(XTrain, YTrain, args)
 predicts = test(XTest, model)
-print(predicts)
-correct = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
-print('pre-train:', correct)
-
-model.fit(XTrain, YTrain, 1, 50, 1)
-
-predicts = test(XTest, model)
-print(predicts)
-correct = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
-print('post-train:', correct)
+accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
+print('Accuracy: {}\n'.format(accuracy))
