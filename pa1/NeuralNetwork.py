@@ -62,11 +62,14 @@ class NeuralNetwork:
         The matrix containing sample features for testing.
     Returns
     -------
-    YPredict : numpy array
+    YPredict : int
         The predictions of X.
     ----------
     """
-    return self.forward(X)
+    outputs = self.forward(X)
+    print("outputs", outputs)
+    YPredict = outputs.argmax()
+    return YPredict
 
   def forward(self, X):
     # Perform matrix multiplication and activation twice (one for each layer).
