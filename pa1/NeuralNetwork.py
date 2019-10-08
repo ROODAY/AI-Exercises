@@ -3,12 +3,15 @@ import os, sys
 import math 
 
 def softmax(X):
-  """Compute softmax values for each sets of scores in x."""
   e_x = np.exp(X - np.max(X))
   return e_x / e_x.sum()
 
 def sigmoid(X):
   return 1.0/(1.0 + np.exp(-X))
+
+def delta_sigmoid(X):
+  f = sigmoid(X)
+  return f * (1 - f)
 
 class NeuralNetwork:
   def __init__(self, HNodes, ONodes, activate, deltaActivate):
@@ -16,15 +19,6 @@ class NeuralNetwork:
     self.ONodes = ONodes # the number of nodes in the output layer
     self.activate = activate # a function used to activate
     self.deltaActivate = deltaActivate # the derivative of activate
-
-  def test(self, X):
-    # Layer 1 Input = [a, b, ..., BIAS], shape = (X.shape[1] + 1,)
-    # Layer 1 Weights should be shape (HNodes, X.shape[1] + 1) to output shape (HNodes,)
-    self.W1 = np.random.rand(self.HNodes, X.shape[1] + 1)
-
-    # Layer 2 Input = [...HNodes, BIAS], shape = (HNodes + 1,)
-    # Layer 2 Weights should be shape (ONodes, HNodes + 1) to output shape (ONodes,)
-    self.W2 = np.random.rand(self.ONodes, self.HNodes + 1)
 
   def fit(self, X, Y, learningRate, epochs, regLambda):
     """
@@ -49,19 +43,9 @@ class NeuralNetwork:
     self.W2 = np.random.rand(self.ONodes, self.HNodes + 1)
     
     for e in range(epochs):
-      for i in range(len(X)):
-        out = self.forward(X)
-        self.backpropogate(X, Y, out)  
-    
-    # For each epoch, do
-        # For each training sample (X[i], Y[i]), do
-            # 1. Forward propagate once. Use the function "forward" here!
-    
-            
-            # 2. Backward progate once. Use the function "backpropagate" here!
-            
-            
-    pass
+      for i in range(len(X)): #for f, b in zip(foo, bar):
+        YPredict = self.forward(X[i])
+        self.backpropagate(X[i], Y[i], YPredict, learningRate)
 
   def predict(self, X):
     """
@@ -71,13 +55,11 @@ class NeuralNetwork:
         The matrix containing sample features for testing.
     Returns
     -------
-    YPredict : int
+    YPredict : numpy matrix
         The predictions of X.
     ----------
     """
-    outputs = self.forward(X)
-    print("outputs", outputs)
-    YPredict = outputs.argmax()
+    YPredict = [self.forward(sample).argmax() for sample in X]
     return YPredict
 
   def forward(self, X):
@@ -86,31 +68,36 @@ class NeuralNetwork:
     X_biased = np.hstack((X, 1))
     l1_output = self.activate(np.dot(self.W1, X_biased))
     l1_biased = np.hstack((l1_output, 1))
-    output_layer_output = softmax(np.dot(self.W2, l1_biased)) #self.activate(np.dot(self.W2, l1_biased))
+    output_layer_output = softmax(np.dot(self.W2, l1_biased))
     return output_layer_output
       
-  def backpropagate(self, X, YTrue, YPredict):
+  def backpropagate(self, X, YTrue, YPredict, learningRate):
     # Compute loss / cost using the getCost function.
-    loss = YTrue - YPredict # cost 
+    loss = self.getCost(YTrue, YPredict) #YTrue - YPredict # cost 
     d_output  = loss*self.deltaActivate(YPredict)
+
     # Compute gradient for each layer.
     g_loss = d_output.dot(self.W2.T) 
-    d_loss = g_loss*self.deltaActivate(self.activate(self.np.dot(X, self.W1)))
+    d_loss = g_loss*self.deltaActivate(self.activate(np.dot(X, self.W1)))
         
     # Update weight matrices.
-
-    self.W1 += X.T.dot(d_loss)
-    self.W2 += d_loss.T.dot(d_output) 
-                 
-    pass
+    self.W1 += X.T.dot(d_loss) * learningRate
+    self.W2 += d_loss.T.dot(d_output) * learningRate
       
   def getCost(self, YTrue, YPredict):
     # Compute loss / cost in terms of crossentropy.
     # (hint: your regularization term should appear here)
-    if YPredict == 1:
-        return -math.log(YTrue)
-    else:
-        return -math.log(1 - YPredict)
+
+    cost = 0
+    for c in range(self.ONodes):
+      y = 1 if c == YTrue else 0
+      cost += y * math.log(YPredict[c])
+
+    return cost * -1
+    #if YPredict == 1:
+    #    return -math.log(YTrue)
+    #else:
+    #    return -math.log(1 - YPredict)
 
 def getData(XPath, YPath):
   '''
@@ -276,8 +263,15 @@ def getPerformanceScores(YTrue, YPredict):
 
 X, Y = getData('Data/dataset1/LinearX.csv', 'Data/dataset1/LinearY.csv')
 splits = splitData(X, Y)
+train_set = splits[0][0]
+XTrain = []
+YTrain = []
+for index in train_set:
+  XTrain.append(X[index])
+  YTrain.append(Y[index])
 
-model = NeuralNetwork(5, 2, sigmoid, 1)
-model.test(X)
-pre = model.predict(X[0])
-print(pre)
+XTrain = np.array(XTrain)
+YTrain = np.array(YTrain)
+
+model = NeuralNetwork(5, 2, sigmoid, delta_sigmoid)
+model.fit(XTrain, YTrain, 1, 50, 1)
