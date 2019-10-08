@@ -56,9 +56,11 @@ class NeuralNetwork:
     self.W2 = np.random.rand(self.HNodes + 1, self.ONodes)
     
     for e in tqdm(range(epochs), desc='Epochs'):
-      for i in range(len(X)): #for f, b in zip(foo, bar):
-        YPredict = self.forward(X[i])
-        self.backpropagate(X[i], Y[i], YPredict, learningRate)
+      for x, y in zip(X, Y):
+        YPredict = self.forward(x)
+        self.backpropagate(x, y, YPredict, learningRate, regLambda)
+        #print('Cost:', self.getCost(y, YPredict, regLambda))
+
 
   def predict(self, X):
     """
@@ -77,21 +79,19 @@ class NeuralNetwork:
   def forward(self, X):
     # Perform matrix multiplication and activation twice (one for each layer).
     # (hint: add a bias term before multiplication)
-    X_biased = np.hstack((X, 1))
-    self.X1 = X_biased
-    self.Z1 = np.dot(self.W1.T, X_biased)
-    l1_output = self.activate(self.Z1)
-    self.A1 = l1_output
+    # Hidden Layer
+    self.X1 = np.hstack((X, 1))
+    self.Z1 = np.dot(self.W1.T, self.X1)
+    self.A1 = self.activate(self.Z1)
 
-    l1_biased = np.hstack((l1_output, 1))
-    self.X2 = l1_biased
-    self.Z2 = np.dot(self.W2.T, l1_biased)
-    output_layer_output = softmax(self.Z2)
-    self.A2 = output_layer_output
+    # Output Layer
+    self.X2 = np.hstack((self.A1, 1))
+    self.Z2 = np.dot(self.W2.T, self.X2)
+    self.A2 = softmax(self.Z2)
 
-    return output_layer_output
+    return self.A2
       
-  def backpropagate(self, X, YTrue, YPredict, learningRate):
+  def backpropagate(self, X, YTrue, YPredict, learningRate, regLambda):
     # https://dev.to/shamdasani/build-a-flexible-neural-network-with-backpropagation-in-python
 
     Y = np.zeros(self.ONodes)
@@ -102,22 +102,17 @@ class NeuralNetwork:
     dOutput_dZ2 = delta_softmax(self.Z2)
     dCost_dZ2 = np.dot(dCost_dOutput, dOutput_dZ2)[:, np.newaxis]
     dZ2_dW2 = self.X2[:, np.newaxis]
-    dCost_dW2 = np.dot(dCost_dZ2, dZ2_dW2.T)
+    dCost_dW2 = np.dot(dCost_dZ2, dZ2_dW2.T) + regLambda * self.W2.T
 
     # calculate change for W1
     dCost_dA1 = sum(np.dot(self.W2, dCost_dZ2))
     dA1_dZ1 = self.deltaActivate(self.Z1)[:, np.newaxis]
     dCost_dZ1 = np.dot(dCost_dA1, dA1_dZ1.T)[:, np.newaxis]
     dZ1_dW1 = self.X1[:, np.newaxis]
-    dCost_dW1 = np.dot(dCost_dZ1, dZ1_dW1.T)
+    dCost_dW1 = np.dot(dCost_dZ1, dZ1_dW1.T) + regLambda * self.W1.T
 
-    #self.W1 = self.W1 - (dCost_dW1.T + np.multiply(regLambda / self.ONodes, self.W1)) * learningRate
-    #self.W2 = self.W2 - (dCost_dW2.T + np.multiply(regLambda / self.ONodes, self.W2)) * learningRate
-
-    self.W1 = np.multiply(1 - (learningRate * regLambda) / self.ONodes, self.W1) - dCost_dW1.T * learningRate
-    self.W2 = np.multiply(1 - (learningRate * regLambda) / self.ONodes, self.W2) - dCost_dW2.T * learningRate
-    return
-    
+    self.W1 -= dCost_dW1.T * learningRate
+    self.W2 -= dCost_dW2.T * learningRate
       
   def getCost(self, YTrue, YPredict, regLambda):
     # Compute loss / cost in terms of crossentropy.
@@ -290,8 +285,10 @@ def getPerformanceScores(YTrue, YPredict):
   d["recall"] = Recall 
   d["f1"] = F1
   return d
-'''
+
+print("#################")
 print("Linear Data Tests")
+print("#################")
 X, Y = getData('Data/dataset1/LinearX.csv', 'Data/dataset1/LinearY.csv')
 splits = splitData(X, Y)
 
@@ -301,7 +298,7 @@ activate = sigmoid
 deltaActivate = delta_sigmoid
 learningRate = 1
 epochs = 50
-regLambda = 0.001
+regLambda = 0
 args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
 
 for i, split in enumerate(splits):
@@ -317,8 +314,10 @@ for i, split in enumerate(splits):
   predicts = test(XTest, model)
   accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
   print('Split {} Accuracy: {}\n'.format(i+1, accuracy))
-'''
+
+print("####################")
 print("Nonlinear Data Tests")
+print("####################")
 X, Y = getData('Data/dataset1/NonlinearX.csv', 'Data/dataset1/NonlinearY.csv')
 splits = splitData(X, Y)
 
@@ -328,7 +327,7 @@ activate = sigmoid
 deltaActivate = delta_sigmoid
 learningRate = 1
 epochs = 50
-regLambda = 0.001
+regLambda = 0
 args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
 
 for i, split in enumerate(splits):
@@ -345,7 +344,9 @@ for i, split in enumerate(splits):
   accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
   print('Split {} Accuracy: {}\n'.format(i+1, accuracy))
 
+print("################")
 print("Digit Data Tests")
+print("################")
 XTrain, YTrain = getData('Data/dataset2/Digit_X_train.csv', 'Data/dataset2/Digit_y_train.csv')
 XTest, YTest = getData('Data/dataset2/Digit_X_test.csv', 'Data/dataset2/Digit_y_test.csv')
 
@@ -353,9 +354,9 @@ HNodes = 7
 ONodes = 10
 activate = sigmoid
 deltaActivate = delta_sigmoid
-learningRate = 1.25
+learningRate = 1
 epochs = 50
-regLambda = 0.001
+regLambda = 0
 args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
 
 model = train(XTrain, YTrain, args)
