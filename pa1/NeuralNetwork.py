@@ -77,17 +77,31 @@ class NeuralNetwork:
     return output_layer_output
       
   def backpropagate(self, X, YTrue, YPredict, learningRate):
-    # Compute loss / cost using the getCost function.
-    loss = self.getCost(YTrue, YPredict) #YTrue - YPredict # cost 
-    d_output  = loss*self.deltaActivate(YPredict)
+    # https://dev.to/shamdasani/build-a-flexible-neural-network-with-backpropagation-in-python
 
-    # Compute gradient for each layer.
-    g_loss = d_output.dot(self.W2.T) 
-    d_loss = g_loss*self.deltaActivate(self.activate(np.dot(X, self.W1)))
+    print(YTrue, YPredict)
+    loss = self.getCost(YTrue, YPredict) # loss on overall output
+    print(loss)
+    d_output = loss * delta_softmax(YPredict) # derivative of softmax (output activation function) applied to loss
+    print("d_output shape: {}".format(d_output.shape))
+
+    h_loss = d_output.dot(self.W2.T) # how much of hidden layer weights contributed to error
+
+    # perhaps save this during each pass so we dont have to recompute
+    X_biased = np.hstack((X, 1))
+    l1_output = self.activate(np.dot(self.W1.T, X_biased))
+    l1_biased = np.hstack((l1_output, 1))
+
+    d_hidden = h_loss * self.deltaActivate(l1_biased) # derivative of hidden layer activation function applied to hidden layer loss
         
+    print("h_loss shape: {}".format(h_loss.shape))
+    print("d_hidden shape: {}".format(d_hidden.shape))
+
     # Update weight matrices.
-    self.W1 += X.T.dot(d_loss) * learningRate
-    self.W2 += d_loss.T.dot(d_output) * learningRate
+    print(X_biased.T.shape)
+    print(d_hidden.shape)
+    self.W1 += X_biased.T.dot(d_hidden) * learningRate
+    self.W2 += l1_biased.T.dot(d_output) * learningRate
       
   def getCost(self, YTrue, YPredict):
     # Compute loss / cost in terms of crossentropy.
@@ -99,10 +113,6 @@ class NeuralNetwork:
       cost += y * math.log(YPredict[c])
 
     return cost * -1
-    #if YPredict == 1:
-    #    return -math.log(YTrue)
-    #else:
-    #    return -math.log(1 - YPredict)
 
 def getData(XPath, YPath):
   '''
