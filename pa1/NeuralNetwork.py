@@ -33,15 +33,6 @@ class NeuralNetwork:
     self.activate = activate # a function used to activate
     self.deltaActivate = deltaActivate # the derivative of activate
 
-  def initWeights(self, X):
-    # Layer 1 Input = [a, b, ..., BIAS], shape = (X.shape[1] + 1,)
-    # Layer 1 Weights should be shape (HNodes, X.shape[1] + 1) to output shape (HNodes,)
-    self.W1 = np.random.rand(X.shape[1] + 1, self.HNodes)
-
-    # Layer 2 Input = [...HNodes, BIAS], shape = (HNodes + 1,)
-    # Layer 2 Weights should be shape (ONodes, HNodes + 1) to output shape (ONodes,)
-    self.W2 = np.random.rand(self.HNodes + 1, self.ONodes)
-
   def fit(self, X, Y, learningRate, epochs, regLambda):
     """
     This function is used to train the model.
@@ -55,8 +46,14 @@ class NeuralNetwork:
     -------
     None
     """
+    
+    # Layer 1 Input = [a, b, ..., BIAS], shape = (X.shape[1] + 1,)
+    # Layer 1 Weights should be shape (HNodes, X.shape[1] + 1) to output shape (HNodes,)
+    self.W1 = np.random.rand(X.shape[1] + 1, self.HNodes)
 
-    self.initWeights(X)
+    # Layer 2 Input = [...HNodes, BIAS], shape = (HNodes + 1,)
+    # Layer 2 Weights should be shape (ONodes, HNodes + 1) to output shape (ONodes,)
+    self.W2 = np.random.rand(self.HNodes + 1, self.ONodes)
     
     for e in tqdm(range(epochs), desc='Epochs'):
       for i in range(len(X)): #for f, b in zip(foo, bar):
@@ -107,25 +104,18 @@ class NeuralNetwork:
     dZ2_dW2 = self.X2[:, np.newaxis]
     dCost_dW2 = np.dot(dCost_dZ2, dZ2_dW2.T)
 
-    # [a1|1] * W2 = Z2
-    # cost(Z2) = ...
-    # dcost / dz2 = dCost_dZ2
-
     # calculate change for W1
-    #print('\n\nW2 shape: {}, dCost_dZ2 shape: {}'.format(self.W2.shape, dCost_dZ2.shape))
     dCost_dA1 = sum(np.dot(self.W2, dCost_dZ2))
-    #print('\n\ndCost_dA1 shape: {}'.format(dCost_dA1.shape))
     dA1_dZ1 = self.deltaActivate(self.Z1)[:, np.newaxis]
-    #print('dA1_dZ1 shape: {}'.format(dA1_dZ1.shape))
     dCost_dZ1 = np.dot(dCost_dA1, dA1_dZ1.T)[:, np.newaxis]
-    #print('dCost_dZ1 shape: {}'.format(dCost_dZ1.shape))
     dZ1_dW1 = self.X1[:, np.newaxis]
-    #print('dZ1_dW1 shape: {}'.format(dZ1_dW1.shape))
     dCost_dW1 = np.dot(dCost_dZ1, dZ1_dW1.T)
-    #print('dCost_dW1 shape: {}'.format(dCost_dW1.shape))
 
-    self.W1 = self.W1 - dCost_dW1.T * learningRate
-    self.W2 = self.W2 - dCost_dW2.T * learningRate
+    #self.W1 = self.W1 - (dCost_dW1.T + np.multiply(regLambda / self.ONodes, self.W1)) * learningRate
+    #self.W2 = self.W2 - (dCost_dW2.T + np.multiply(regLambda / self.ONodes, self.W2)) * learningRate
+
+    self.W1 = np.multiply(1 - (learningRate * regLambda) / self.ONodes, self.W1) - dCost_dW1.T * learningRate
+    self.W2 = np.multiply(1 - (learningRate * regLambda) / self.ONodes, self.W2) - dCost_dW2.T * learningRate
     return
     
       
@@ -300,8 +290,8 @@ def getPerformanceScores(YTrue, YPredict):
   d["recall"] = Recall 
   d["f1"] = F1
   return d
-
-'''print("Linear Data Tests")
+'''
+print("Linear Data Tests")
 X, Y = getData('Data/dataset1/LinearX.csv', 'Data/dataset1/LinearY.csv')
 splits = splitData(X, Y)
 
@@ -311,34 +301,7 @@ activate = sigmoid
 deltaActivate = delta_sigmoid
 learningRate = 1
 epochs = 50
-regLambda = 1
-args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
-
-for i, split in enumerate(splits):
-  print('Beginning Split {}'.format(i+1))
-  train_set = split[0]
-  XTrain = np.array([X[index] for index in train_set])
-  YTrain = np.array([Y[index] for index in train_set])
-  model = train(XTrain, YTrain, args)
-
-  test_set = split[1]
-  XTest = np.array([X[index] for index in test_set])
-  YTest = np.array([Y[index] for index in test_set])
-  predicts = test(XTest, model)
-  accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
-  print('Split {} Accuracy: {}\n'.format(i+1, accuracy))
-
-print("Nonlinear Data Tests")
-X, Y = getData('Data/dataset1/NonlinearX.csv', 'Data/dataset1/NonlinearY.csv')
-splits = splitData(X, Y)
-
-HNodes = 5
-ONodes = 2
-activate = sigmoid
-deltaActivate = delta_sigmoid
-learningRate = 1
-epochs = 50
-regLambda = 1
+regLambda = 0.001
 args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
 
 for i, split in enumerate(splits):
@@ -355,6 +318,33 @@ for i, split in enumerate(splits):
   accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
   print('Split {} Accuracy: {}\n'.format(i+1, accuracy))
 '''
+print("Nonlinear Data Tests")
+X, Y = getData('Data/dataset1/NonlinearX.csv', 'Data/dataset1/NonlinearY.csv')
+splits = splitData(X, Y)
+
+HNodes = 5
+ONodes = 2
+activate = sigmoid
+deltaActivate = delta_sigmoid
+learningRate = 1
+epochs = 50
+regLambda = 0.001
+args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
+
+for i, split in enumerate(splits):
+  print('Beginning Split {}'.format(i+1))
+  train_set = split[0]
+  XTrain = np.array([X[index] for index in train_set])
+  YTrain = np.array([Y[index] for index in train_set])
+  model = train(XTrain, YTrain, args)
+
+  test_set = split[1]
+  XTest = np.array([X[index] for index in test_set])
+  YTest = np.array([Y[index] for index in test_set])
+  predicts = test(XTest, model)
+  accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
+  print('Split {} Accuracy: {}\n'.format(i+1, accuracy))
+
 print("Digit Data Tests")
 XTrain, YTrain = getData('Data/dataset2/Digit_X_train.csv', 'Data/dataset2/Digit_y_train.csv')
 XTest, YTest = getData('Data/dataset2/Digit_X_test.csv', 'Data/dataset2/Digit_y_test.csv')
@@ -365,7 +355,7 @@ activate = sigmoid
 deltaActivate = delta_sigmoid
 learningRate = 1.25
 epochs = 50
-regLambda = 1
+regLambda = 0.001
 args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
 
 model = train(XTrain, YTrain, args)
