@@ -1,6 +1,14 @@
 import numpy as np
 import os, sys
 
+def softmax(X):
+  """Compute softmax values for each sets of scores in x."""
+  e_x = np.exp(X - np.max(X))
+  return e_x / e_x.sum()
+
+def sigmoid(X):
+  return 1.0/(1.0 + np.exp(-X))
+
 class NeuralNetwork:
   def __init__(self, HNodes, ONodes, activate, deltaActivate):
     self.HNodes = HNodes # the number of nodes in the hidden layer
@@ -77,7 +85,7 @@ class NeuralNetwork:
     X_biased = np.hstack((X, 1))
     l1_output = self.activate(np.dot(self.W1, X_biased))
     l1_biased = np.hstack((l1_output, 1))
-    output_layer_output = self.activate(np.dot(self.W2, l1_biased))
+    output_layer_output = softmax(np.dot(self.W2, l1_biased)) #self.activate(np.dot(self.W2, l1_biased))
     return output_layer_output
       
   def backpropagate(self):
@@ -261,9 +269,6 @@ def getPerformanceScores(YTrue, YPredict):
 
 X, Y = getData('Data/dataset1/LinearX.csv', 'Data/dataset1/LinearY.csv')
 splits = splitData(X, Y)
-
-def sigmoid(X):
-  return 1.0/(1.0 + np.exp(-X))
 
 model = NeuralNetwork(5, 2, sigmoid, 1)
 model.test(X)
