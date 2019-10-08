@@ -1,5 +1,6 @@
 import numpy as np
 import os, sys
+import math 
 
 def softmax(X):
   """Compute softmax values for each sets of scores in x."""
@@ -49,8 +50,8 @@ class NeuralNetwork:
     
     for e in range(epochs):
       for i in range(len(X)):
-        self.forward(X[i])
-        self.backpropagate()
+        out = self.forward(X)
+        self.backpropogate(X, Y, out)  
     
     # For each epoch, do
         # For each training sample (X[i], Y[i]), do
@@ -90,20 +91,26 @@ class NeuralNetwork:
       
   def backpropagate(self):
     # Compute loss / cost using the getCost function.
-            
-            
-            
+    loss = YTrue - YPredict # cost 
+    d_output  = loss*self.deltaActivate(YPredict)
     # Compute gradient for each layer.
-    
-    
-    
+    g_loss = d_output.dot(self.W2.T) 
+    d_loss = g_loss*self.deltaActivate(self.activate(self.np.dot(X, self.W1)))
+        
     # Update weight matrices.
+
+    self.W1 += X.T.dot(d_loss)
+    self.W2 += d_loss.T.dot(d_output) 
+                 
     pass
       
   def getCost(self, YTrue, YPredict):
     # Compute loss / cost in terms of crossentropy.
     # (hint: your regularization term should appear here)
-    pass
+    if YPredict == 1:
+        return -math.log(YTrue)
+    else:
+        return -math.log(1 - YPredict)
 
 def getData(XPath, YPath):
   '''
