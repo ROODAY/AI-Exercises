@@ -89,7 +89,7 @@ class NeuralNetwork:
     output_layer_output = softmax(np.dot(self.W2, l1_biased)) #self.activate(np.dot(self.W2, l1_biased))
     return output_layer_output
       
-  def backpropagate(self):
+  def backpropagate(self, X, YTrue, YPredict):
     # Compute loss / cost using the getCost function.
     loss = YTrue - YPredict # cost 
     d_output  = loss*self.deltaActivate(YPredict)
