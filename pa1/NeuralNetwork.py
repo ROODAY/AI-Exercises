@@ -25,6 +25,15 @@ class NeuralNetwork:
     self.activate = activate # a function used to activate
     self.deltaActivate = deltaActivate # the derivative of activate
 
+  def initWeights(self, X):
+    # Layer 1 Input = [a, b, ..., BIAS], shape = (X.shape[1] + 1,)
+    # Layer 1 Weights should be shape (HNodes, X.shape[1] + 1) to output shape (HNodes,)
+    self.W1 = np.random.rand(X.shape[1] + 1, self.HNodes)
+
+    # Layer 2 Input = [...HNodes, BIAS], shape = (HNodes + 1,)
+    # Layer 2 Weights should be shape (ONodes, HNodes + 1) to output shape (ONodes,)
+    self.W2 = np.random.rand(self.HNodes + 1, self.ONodes)
+
   def fit(self, X, Y, learningRate, epochs, regLambda):
     """
     This function is used to train the model.
@@ -39,13 +48,7 @@ class NeuralNetwork:
     None
     """
 
-    # Layer 1 Input = [a, b, ..., BIAS], shape = (X.shape[1] + 1,)
-    # Layer 1 Weights should be shape (HNodes, X.shape[1] + 1) to output shape (HNodes,)
-    self.W1 = np.random.rand(X.shape[1] + 1, self.HNodes)
-
-    # Layer 2 Input = [...HNodes, BIAS], shape = (HNodes + 1,)
-    # Layer 2 Weights should be shape (ONodes, HNodes + 1) to output shape (ONodes,)
-    self.W2 = np.random.rand(self.HNodes + 1, self.ONodes)
+    self.initWeights(X)
     
     for e in range(epochs):
       for i in range(len(X)): #for f, b in zip(foo, bar):
@@ -71,48 +74,49 @@ class NeuralNetwork:
     # Perform matrix multiplication and activation twice (one for each layer).
     # (hint: add a bias term before multiplication)
     X_biased = np.hstack((X, 1))
-    l1_output = self.activate(np.dot(self.W1.T, X_biased))
+    self.X1 = X_biased
+    self.Z1 = np.dot(self.W1.T, X_biased)
+    l1_output = self.activate(self.Z1)
+    self.A1 = l1_output
+
     l1_biased = np.hstack((l1_output, 1))
-    output_layer_output = softmax(np.dot(self.W2.T, l1_biased))
+    self.X2 = l1_biased
+    self.Z2 = np.dot(self.W2.T, l1_biased)
+    output_layer_output = softmax(self.Z2)
+    self.A2 = output_layer_output
+
     return output_layer_output
       
   def backpropagate(self, X, YTrue, YPredict, learningRate):
     # https://dev.to/shamdasani/build-a-flexible-neural-network-with-backpropagation-in-python
 
-    print(YTrue, YPredict)
-    loss = self.getCost(YTrue, YPredict) # loss on overall output
-    print(loss)
-    d_output = loss * delta_softmax(YPredict) # derivative of softmax (output activation function) applied to loss
-    print("d_output shape: {}".format(d_output.shape))
+    Y = [0] * self.ONodes
+    Y[int(YTrue)] = 1
+    Y = np.array(Y)
 
-    h_loss = d_output.dot(self.W2.T) # how much of hidden layer weights contributed to error
+    # calculate change for W2
+    dCost_dOutput = YPredict - Y
+    dOutput_dZ2 = delta_softmax(self.Z2)
+    dZ2_dW2 = self.X2
+    dCost_dW2 = np.dot(np.dot(dCost_dOutput, dOutput_dZ2)[:, np.newaxis], dZ2_dW2[:, np.newaxis].T)
+    #print(dCost_dW2.shape)
 
-    # perhaps save this during each pass so we dont have to recompute
-    X_biased = np.hstack((X, 1))
-    l1_output = self.activate(np.dot(self.W1.T, X_biased))
-    l1_biased = np.hstack((l1_output, 1))
+    # calculate change for W1
+    dCost_dA1 = 1
+    dA1_dZ1 = self.deltaActivate(self.Z1)
+    dZ1_dW1 = self.X1
+    dCost_dW1 = 1
 
-    d_hidden = h_loss * self.deltaActivate(l1_biased) # derivative of hidden layer activation function applied to hidden layer loss
-        
-    print("h_loss shape: {}".format(h_loss.shape))
-    print("d_hidden shape: {}".format(d_hidden.shape))
-
-    # Update weight matrices.
-    print(X_biased.T.shape)
-    print(d_hidden.shape)
-    self.W1 += X_biased.T.dot(d_hidden) * learningRate
-    self.W2 += l1_biased.T.dot(d_output) * learningRate
+    self.W1 = self.W1 - dCost_dW1 * learningRate
+    self.W2 = self.W2 - dCost_dW2.T * learningRate
+    return
+    
       
   def getCost(self, YTrue, YPredict):
     # Compute loss / cost in terms of crossentropy.
     # (hint: your regularization term should appear here)
     # https://ml-cheatsheet.readthedocs.io/en/latest/loss_functions.html
-    cost = 0
-    for c in range(self.ONodes):
-      y = 1 if c == YTrue else 0
-      cost += y * math.log(YPredict[c])
-
-    return cost * -1
+    return -1 * math.log(YPredict[int(YTrue)])
 
 def getData(XPath, YPath):
   '''
@@ -288,5 +292,27 @@ for index in train_set:
 XTrain = np.array(XTrain)
 YTrain = np.array(YTrain)
 
+test_set = splits[0][1]
+XTest = []
+YTest = []
+for index in test_set:
+  XTest.append(X[index])
+  YTest.append(Y[index])
+
+XTest = np.array(XTest)
+YTest = np.array(YTest)
+
 model = NeuralNetwork(5, 2, sigmoid, delta_sigmoid)
+model.initWeights(XTrain)
+
+predicts = test(XTest, model)
+print(predicts)
+correct = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
+print('pre-train:', correct)
+
 model.fit(XTrain, YTrain, 1, 50, 1)
+
+predicts = test(XTest, model)
+print(predicts)
+correct = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
+print('post-train:', correct)
