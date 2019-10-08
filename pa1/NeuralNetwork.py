@@ -6,6 +6,11 @@ def softmax(X):
   e_x = np.exp(X - np.max(X))
   return e_x / e_x.sum()
 
+def delta_softmax(X):
+  f = softmax(X)
+  s = f.reshape(-1,1)
+  return np.diagflat(s) - np.dot(s, s.T)
+
 def sigmoid(X):
   return 1.0/(1.0 + np.exp(-X))
 
@@ -87,7 +92,7 @@ class NeuralNetwork:
   def getCost(self, YTrue, YPredict):
     # Compute loss / cost in terms of crossentropy.
     # (hint: your regularization term should appear here)
-
+    # https://ml-cheatsheet.readthedocs.io/en/latest/loss_functions.html
     cost = 0
     for c in range(self.ONodes):
       y = 1 if c == YTrue else 0
