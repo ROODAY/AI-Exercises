@@ -2,19 +2,20 @@ import numpy as np
 import os, sys
 
 class NeuralNetwork:
-  def __init__(self, NNodes, activate, deltaActivate):
-    self.NNodes = NNodes # the number of nodes in the hidden layer
+  def __init__(self, HNodes, ONodes, activate, deltaActivate):
+    self.HNodes = HNodes # the number of nodes in the hidden layer
+    self.ONodes = ONodes # the number of nodes in the output layer
     self.activate = activate # a function used to activate
     self.deltaActivate = deltaActivate # the derivative of activate
 
   def test(self, X):
-    # Layer 1 Input = [a, b, ..., BIAS], shape = X.shape[1] + 1,)
-    # Layer 1 Weights should be shape (NNodes, X.shape[1] + 1) to output shape (NNodes, 1)
-    self.W1 = np.random.rand(self.NNodes, X.shape[1] + 1)
+    # Layer 1 Input = [a, b, ..., BIAS], shape = (X.shape[1] + 1,)
+    # Layer 1 Weights should be shape (HNodes, X.shape[1] + 1) to output shape (HNodes,)
+    self.W1 = np.random.rand(self.HNodes, X.shape[1] + 1)
 
-    # Layer 2 Input = [...NNodes, BIAS], shape = (NNodes + 1,)
-    # Layer 2 Weights should be shape (1, NNodes + 1) to output shape (1, 1)
-    self.W2 = np.random.rand(1, self.NNodes + 1)
+    # Layer 2 Input = [...HNodes, BIAS], shape = (HNodes + 1,)
+    # Layer 2 Weights should be shape (ONodes, HNodes + 1) to output shape (ONodes,)
+    self.W2 = np.random.rand(self.ONodes, self.HNodes + 1)
 
   def fit(self, X, Y, learningRate, epochs, regLambda):
     """
@@ -30,13 +31,13 @@ class NeuralNetwork:
     None
     """
 
-    # Layer 1 Input = [a, b, ..., BIAS], shape = X.shape[1] + 1,)
-    # Layer 1 Weights should be shape (NNodes, X.shape[1] + 1) to output shape (NNodes, 1)
-    self.W1 = np.random.rand(self.NNodes, X.shape[1] + 1)
+    # Layer 1 Input = [a, b, ..., BIAS], shape = (X.shape[1] + 1,)
+    # Layer 1 Weights should be shape (HNodes, X.shape[1] + 1) to output shape (HNodes,)
+    self.W1 = np.random.rand(self.HNodes, X.shape[1] + 1)
 
-    # Layer 2 Input = [...NNodes, BIAS], shape = (NNodes + 1,)
-    # Layer 2 Weights should be shape (1, NNodes + 1) to output shape (1, 1)
-    self.W2 = np.random.rand(1, self.NNodes + 1)
+    # Layer 2 Input = [...HNodes, BIAS], shape = (HNodes + 1,)
+    # Layer 2 Weights should be shape (ONodes, HNodes + 1) to output shape (ONodes,)
+    self.W2 = np.random.rand(self.ONodes, self.HNodes + 1)
     
     for e in range(epochs):
       for i in range(len(X)):
@@ -93,7 +94,7 @@ class NeuralNetwork:
     # (hint: your regularization term should appear here)
     pass
 
-def getData(dataDir):
+def getData(XPath, YPath):
   '''
   Returns
   -------
@@ -103,8 +104,8 @@ def getData(dataDir):
       Input data labels.
   '''
 
-  X = np.genfromtxt('{}/LinearX.csv'.format(dataDir), delimiter=',')
-  Y = np.genfromtxt('{}/LinearY.csv'.format(dataDir), delimiter=',')
+  X = np.genfromtxt(XPath, delimiter=',')
+  Y = np.genfromtxt(YPath, delimiter=',')
   print('X.shape: {}'.format(X.shape))
   print('Y.shape: {}'.format(Y.shape))
   
@@ -255,18 +256,13 @@ def getPerformanceScores(YTrue, YPredict):
   d["f1"] = F1
   return d
 
-X, Y = getData('Data/dataset1')
+X, Y = getData('Data/dataset1/LinearX.csv', 'Data/dataset1/LinearY.csv')
 splits = splitData(X, Y)
-
-def activate(x):
-  print("Activate Called on shape {}".format(x.shape))
-  print(x)
-  return 1
 
 def sigmoid(X):
   return 1.0/(1.0 + np.exp(-X))
 
-model = NeuralNetwork(5, sigmoid, 1)
+model = NeuralNetwork(5, 2, sigmoid, 1)
 model.test(X)
 pre = model.predict(X[0])
 print(pre)
