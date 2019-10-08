@@ -41,11 +41,11 @@ class NeuralNetwork:
 
     # Layer 1 Input = [a, b, ..., BIAS], shape = (X.shape[1] + 1,)
     # Layer 1 Weights should be shape (HNodes, X.shape[1] + 1) to output shape (HNodes,)
-    self.W1 = np.random.rand(self.HNodes, X.shape[1] + 1)
+    self.W1 = np.random.rand(X.shape[1] + 1, self.HNodes)
 
     # Layer 2 Input = [...HNodes, BIAS], shape = (HNodes + 1,)
     # Layer 2 Weights should be shape (ONodes, HNodes + 1) to output shape (ONodes,)
-    self.W2 = np.random.rand(self.ONodes, self.HNodes + 1)
+    self.W2 = np.random.rand(self.HNodes + 1, self.ONodes)
     
     for e in range(epochs):
       for i in range(len(X)): #for f, b in zip(foo, bar):
@@ -71,9 +71,9 @@ class NeuralNetwork:
     # Perform matrix multiplication and activation twice (one for each layer).
     # (hint: add a bias term before multiplication)
     X_biased = np.hstack((X, 1))
-    l1_output = self.activate(np.dot(self.W1, X_biased))
+    l1_output = self.activate(np.dot(self.W1.T, X_biased))
     l1_biased = np.hstack((l1_output, 1))
-    output_layer_output = softmax(np.dot(self.W2, l1_biased))
+    output_layer_output = softmax(np.dot(self.W2.T, l1_biased))
     return output_layer_output
       
   def backpropagate(self, X, YTrue, YPredict, learningRate):
