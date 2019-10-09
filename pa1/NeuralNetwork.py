@@ -74,7 +74,7 @@ class NeuralNetwork:
         The predictions of X.
     ----------
     """
-    return np.array([self.forward(sample).argmax() for sample in tqdm(X, desc="Predict")])
+    return np.array([self.forward(sample).argmax() for sample in X])
 
   def forward(self, X):
     # Perform matrix multiplication and activation twice (one for each layer).
@@ -201,8 +201,8 @@ def train(XTrain, YTrain, args):
   # 2. Train the model with the function "fit".
   print("Train Model")
   model.fit(XTrain, YTrain, learningRate, epochs, regLambda)
-  #print("Plot decision boundary")
-  #plotDecisionBoundary(model, XTrain, YTrain)
+  print("Plot decision boundary")
+  plotDecisionBoundary(model, XTrain, YTrain)
   
   # 3. Return the model.
   return model
@@ -237,17 +237,22 @@ def getConfusionMatrix(YTrue, YPredict):
       The confusion matrix.
   """
   TP, FP, FN, TN = 0, 0, 0, 0
-  for i in range(len(YTrue)):
-      if YTrue[i] == YPredict[i]:
-          if YTrue[i] == 1:
-              TP+= 1
+  for l in range(len(YTrue)): 
+      for i in range(len(YTrue[0])):
+          if YTrue[l][i] == YPredict[l][i]:
+              if YTrue[l][i] == 1:
+                  TP+= 1
+              else:
+                  TN+= 1
           else:
-              TN+= 1
-      else:
-          if YTrue[i] == 1:
-              FP+= 1
-          else:
-              FN+= 1
+              if YTrue[l][i] == 1:
+                  FP+= 1
+              else:
+                  FN+= 1
+  TN = TN/len(YTrue) 
+  FN = FN/len(YTrue)
+  FP = FP/len(YTrue)
+  TP = TP/len(YTrue)
   CM = np.matrix([[TN, FN], [FP, TP]])
   
   return CM
@@ -271,10 +276,10 @@ def getPerformanceScores(YTrue, YPredict):
   """
   cm = getConfusionMatrix(YTrue, YPredict) 
   d = {} 
-  TP = cm[0][0]
-  TN = cm[1][1]
-  FP = cm[0][1]
-  FN = cm[1][0] 
+  TP = cm.item((1,1))
+  TN = cm.item((0,0))
+  FP = cm.item((0,1))
+  FN = cm.item((1,0))
   Precision = float (TP /(TP+FP)) 
   Recall = float(TP/(TP+FN))
   Accuracy = float((TP +TN) / (TP + TN + FP + FN))
@@ -286,34 +291,46 @@ def getPerformanceScores(YTrue, YPredict):
   d["f1"] = F1
   return d
 
-print("#################")
-print("Linear Data Tests")
-print("#################")
-X, Y = getData('Data/dataset1/LinearX.csv', 'Data/dataset1/LinearY.csv')
-splits = splitData(X, Y)
-
-HNodes = 5
-ONodes = 2
-activate = sigmoid
-deltaActivate = delta_sigmoid
-learningRate = 1
-epochs = 50
-regLambda = 0
-args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
-
-for i, split in enumerate(splits):
-  print('Beginning Split {}'.format(i+1))
-  train_set = split[0]
-  XTrain = np.array([X[index] for index in train_set])
-  YTrain = np.array([Y[index] for index in train_set])
-  model = train(XTrain, YTrain, args)
-
-  test_set = split[1]
-  XTest = np.array([X[index] for index in test_set])
-  YTest = np.array([Y[index] for index in test_set])
-  predicts = test(XTest, model)
-  accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
-  print('Split {} Accuracy: {}\n'.format(i+1, accuracy))
+#print("#################")
+#print("Linear Data Tests")
+#print("#################")
+#X, Y = getData('Data/dataset1/LinearX.csv', 'Data/dataset1/LinearY.csv')
+#splits = splitData(X, Y)
+#
+#HNodes = 5
+#ONodes = 2
+#activate = sigmoid
+#deltaActivate = delta_sigmoid
+#learningRate = 1
+#epochs = 50
+#regLambda = 0
+#args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
+#
+#for i, split in enumerate(splits):
+#  print('Beginning Split {}'.format(i+1))
+#  ytest = [] 
+#  ypredict = [] 
+#  train_set = split[0]
+#  XTrain = np.array([X[index] for index in train_set])
+#  YTrain = np.array([Y[index] for index in train_set])
+#  model = train(XTrain, YTrain, args)
+#
+#  test_set = split[1]
+#  XTest = np.array([X[index] for index in test_set])
+#  YTest = np.array([Y[index] for index in test_set])
+#  predicts = test(XTest, model)
+#  accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
+#  print('Split {} Accuracy: {}\n'.format(i+1, accuracy))
+#  ytest.append(YTest)
+#  ypredict.append(predicts)
+#  
+#perform = getPerformanceScores(ytest, ypredict)
+#print('Confusion Matrix: ')
+#print(perform['CM'])
+#print('Accuracy: ', perform['accuracy'])
+#print('Precision: ', perform['precision'])
+#print('Recall: ', perform['recall'])
+#print('F1 Score', perform['f1'])
 
 print("####################")
 print("Nonlinear Data Tests")
@@ -327,11 +344,13 @@ activate = sigmoid
 deltaActivate = delta_sigmoid
 learningRate = 1
 epochs = 50
-regLambda = 0
+regLambda = 0.005
 args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
 
 for i, split in enumerate(splits):
   print('Beginning Split {}'.format(i+1))
+  ytest = [] 
+  ypredict = [] 
   train_set = split[0]
   XTrain = np.array([X[index] for index in train_set])
   YTrain = np.array([Y[index] for index in train_set])
@@ -343,23 +362,33 @@ for i, split in enumerate(splits):
   predicts = test(XTest, model)
   accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
   print('Split {} Accuracy: {}\n'.format(i+1, accuracy))
+  ytest.append(YTest)
+  ypredict.append(predicts)
+  
+perform = getPerformanceScores(ytest, ypredict)
+print('Confusion Matrix: ')
+print(perform['CM'])
+print('Accuracy: ', perform['accuracy'])
+print('Precision: ', perform['precision'])
+print('Recall: ', perform['recall'])
+print('F1 Score', perform['f1'])
 
-print("################")
-print("Digit Data Tests")
-print("################")
-XTrain, YTrain = getData('Data/dataset2/Digit_X_train.csv', 'Data/dataset2/Digit_y_train.csv')
-XTest, YTest = getData('Data/dataset2/Digit_X_test.csv', 'Data/dataset2/Digit_y_test.csv')
-
-HNodes = 7
-ONodes = 10
-activate = sigmoid
-deltaActivate = delta_sigmoid
-learningRate = 1
-epochs = 50
-regLambda = 0
-args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
-
-model = train(XTrain, YTrain, args)
-predicts = test(XTest, model)
-accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
-print('Accuracy: {}\n'.format(accuracy))
+#print("################")
+#print("Digit Data Tests")
+#print("################")
+#XTrain, YTrain = getData('Data/dataset2/Digit_X_train.csv', 'Data/dataset2/Digit_y_train.csv')
+#XTest, YTest = getData('Data/dataset2/Digit_X_test.csv', 'Data/dataset2/Digit_y_test.csv')
+#
+#HNodes = 7
+#ONodes = 10
+#activate = sigmoid
+#deltaActivate = delta_sigmoid
+#learningRate = 1
+#epochs = 50
+#regLambda = 0
+#args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
+#
+#model = train(XTrain, YTrain, args)
+#predicts = test(XTest, model)
+#accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
+#print('Accuracy: {}\n'.format(accuracy))
