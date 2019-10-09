@@ -4,27 +4,25 @@ import math
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+# Activation function for output layer
 def softmax(X):
   e_x = np.exp(X - np.max(X))
   return e_x / e_x.sum()
 
+# Derivative of softmax for backpropagation
 def delta_softmax(X):
   f = softmax(X)
   s = f.reshape(-1,1)
   return np.diagflat(s) - np.dot(s, s.T)
 
+# Activation function for hidden layer
 def sigmoid(X):
   return 1.0/(1.0 + np.exp(-X))
 
+# Derivative of sigmoid for backpropagation
 def delta_sigmoid(X):
   f = sigmoid(X)
   return f * (1 - f)
-
-def tanh(X):
-  return np.tanh(X)
-
-def delta_tanh(X):
-  return 1 - np.square(tanh(X))
 
 class NeuralNetwork:
   def __init__(self, HNodes, ONodes, activate, deltaActivate):
@@ -78,45 +76,46 @@ class NeuralNetwork:
 
   def forward(self, X):
     # Perform matrix multiplication and activation twice (one for each layer).
-    # (hint: add a bias term before multiplication)
+
     # Hidden Layer
-    self.X1 = np.hstack((X, 1))
+    self.X1 = np.hstack((X, 1)) # augmentation of input to include bias term
     self.Z1 = np.dot(self.W1.T, self.X1)
     self.A1 = self.activate(self.Z1)
 
     # Output Layer
-    self.X2 = np.hstack((self.A1, 1))
+    self.X2 = np.hstack((self.A1, 1)) # augmentation of input to include bias term
     self.Z2 = np.dot(self.W2.T, self.X2)
     self.A2 = softmax(self.Z2)
 
     return self.A2
       
   def backpropagate(self, X, YTrue, YPredict, learningRate, regLambda):
-    # https://dev.to/shamdasani/build-a-flexible-neural-network-with-backpropagation-in-python
+    #https://en.wikipedia.org/wiki/Backpropagation#Finding_the_derivative_of_the_error
+    #[:, np.newaxis] converts shape (x,) => (x, 1), used to ensure dot product doesn't error
 
     Y = np.zeros(self.ONodes)
-    Y[int(YTrue)] = 1
+    Y[int(YTrue)] = 1 # Turn YTrue into one-hot encoded vector
 
     # calculate change for W2
     dCost_dOutput = YPredict - Y
     dOutput_dZ2 = delta_softmax(self.Z2)
     dCost_dZ2 = np.dot(dCost_dOutput, dOutput_dZ2)[:, np.newaxis]
     dZ2_dW2 = self.X2[:, np.newaxis]
-    dCost_dW2 = np.dot(dCost_dZ2, dZ2_dW2.T) + regLambda * self.W2.T
+    dCost_dW2 = np.dot(dCost_dZ2, dZ2_dW2.T) + regLambda * self.W2.T # apply regularization term
 
     # calculate change for W1
     dCost_dA1 = sum(np.dot(self.W2, dCost_dZ2))
     dA1_dZ1 = self.deltaActivate(self.Z1)[:, np.newaxis]
     dCost_dZ1 = np.dot(dCost_dA1, dA1_dZ1.T)[:, np.newaxis]
     dZ1_dW1 = self.X1[:, np.newaxis]
-    dCost_dW1 = np.dot(dCost_dZ1, dZ1_dW1.T) + regLambda * self.W1.T
+    dCost_dW1 = np.dot(dCost_dZ1, dZ1_dW1.T) + regLambda * self.W1.T # apply regularization term
 
+    # update weights
     self.W1 -= dCost_dW1.T * learningRate
     self.W2 -= dCost_dW2.T * learningRate
       
   def getCost(self, YTrue, YPredict, regLambda):
     # Compute loss / cost in terms of crossentropy.
-    # (hint: your regularization term should appear here)
     # https://ml-cheatsheet.readthedocs.io/en/latest/loss_functions.html
     return -1 * math.log(YPredict[int(YTrue)]) + (regLambda / (2 * self.ONodes)) * (np.sum(np.square(self.W1)) + np.sum(np.square(self.W2)))
 
@@ -132,8 +131,6 @@ def getData(XPath, YPath):
 
   X = np.genfromtxt(XPath, delimiter=',')
   Y = np.genfromtxt(YPath, delimiter=',')
-  #print('X.shape: {}'.format(X.shape))
-  #print('Y.shape: {}'.format(Y.shape))
   
   return X, Y
 
@@ -177,7 +174,7 @@ def plotDecisionBoundary(model, X, Y):
   plt.scatter(X[:, 0], X[:, 1], c=Y, cmap=plt.cm.bwr)
   plt.show()
 
-def train(XTrain, YTrain, args):
+def train(XTrain, YTrain, args, plot=True):
   """
   This function is used for the training phase.
   Parameters
@@ -201,8 +198,9 @@ def train(XTrain, YTrain, args):
   # 2. Train the model with the function "fit".
   print("Train Model")
   model.fit(XTrain, YTrain, learningRate, epochs, regLambda)
-  #print("Plot decision boundary")
-  #plotDecisionBoundary(model, XTrain, YTrain)
+  if plot:
+    print("Plot decision boundary")
+    plotDecisionBoundary(model, XTrain, YTrain)
   
   # 3. Return the model.
   return model
@@ -236,6 +234,7 @@ def getConfusionMatrix(YTrue, YPredict):
   CM : numpy matrix
       The confusion matrix.
   """
+  # Note this is considered multi-class, not binary. TP is along diagonal (this generalizes to both datasets)
   CM = np.zeros((len(set(YTrue)), len(set(YTrue))))
 
   for i in range(len(YTrue)):
@@ -269,6 +268,8 @@ def getPerformanceScores(YTrue, YPredict):
   col_sum = np.sum(cm, axis = 0)
   row_sum = np.sum(cm, axis = 1)
 
+  # Calculate Precision, Recall, and Accuracy assuming multiclass classification
+  # For dataset1, binary classification results would simply be the Precision and Recall of class 1
   Precision = np.mean(np.divide(diag, col_sum, out=np.zeros_like(diag), where=col_sum!=0))
   Recall = np.mean(np.divide(diag, row_sum, out=np.zeros_like(diag), where=row_sum!=0))
   Accuracy = np.trace(cm) / np.sum(cm)
@@ -281,6 +282,7 @@ def getPerformanceScores(YTrue, YPredict):
   d["f1"] = F1
   return d
 
+'''
 print("#################")
 print("Linear Data Tests")
 print("#################")
@@ -366,7 +368,7 @@ print('Accuracy: {}'.format(perform['accuracy']))
 print('Precision: {}'.format(perform['precision']))
 print('Recall: {}'.format(perform['recall']))
 print('F1 Score: {}\n'.format(perform['f1']))
-
+'''
 
 print("################")
 print("Digit Data Tests")
@@ -374,7 +376,7 @@ print("################")
 XTrain, YTrain = getData('Data/dataset2/Digit_X_train.csv', 'Data/dataset2/Digit_y_train.csv')
 XTest, YTest = getData('Data/dataset2/Digit_X_test.csv', 'Data/dataset2/Digit_y_test.csv')
 
-HNodes = 6
+HNodes = 10
 ONodes = 10
 activate = sigmoid
 deltaActivate = delta_sigmoid
@@ -383,7 +385,7 @@ epochs = 100
 regLambda = 0.001
 args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
 
-model = train(XTrain, YTrain, args)
+model = train(XTrain, YTrain, args, False) # don't plot
 predicts = test(XTest, model)
 accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
 print('Accuracy: {}\n'.format(accuracy))
