@@ -291,98 +291,14 @@ def getPerformanceScores(YTrue, YPredict):
   d["f1"] = F1
   return d
 
-#print("#################")
-#print("Linear Data Tests")
-#print("#################")
-#X, Y = getData('Data/dataset1/LinearX.csv', 'Data/dataset1/LinearY.csv')
-#splits = splitData(X, Y)
-#
-#HNodes = 5
-#ONodes = 2
-#activate = sigmoid
-#deltaActivate = delta_sigmoid
-#learningRate = 1
-#epochs = 50
-#regLambda = 0
-#args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
-#
-#for i, split in enumerate(splits):
-#  print('Beginning Split {}'.format(i+1))
-#  ytest = [] 
-#  ypredict = [] 
-#  train_set = split[0]
-#  XTrain = np.array([X[index] for index in train_set])
-#  YTrain = np.array([Y[index] for index in train_set])
-#  model = train(XTrain, YTrain, args)
-#
-#  test_set = split[1]
-#  XTest = np.array([X[index] for index in test_set])
-#  YTest = np.array([Y[index] for index in test_set])
-#  predicts = test(XTest, model)
-#  accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
-#  print('Split {} Accuracy: {}\n'.format(i+1, accuracy))
-#  ytest.append(YTest)
-#  ypredict.append(predicts)
-#  
-#perform = getPerformanceScores(ytest, ypredict)
-#print('Confusion Matrix: ')
-#print(perform['CM'])
-#print('Accuracy: ', perform['accuracy'])
-#print('Precision: ', perform['precision'])
-#print('Recall: ', perform['recall'])
-#print('F1 Score', perform['f1'])
+print("#################")
+print("Linear Data Tests")
+print("#################")
+X, Y = getData('Data/dataset1/LinearX.csv', 'Data/dataset1/LinearY.csv')
+splits = splitData(X, Y)
 
-# =============================================================================
-# print("####################")
-# print("Nonlinear Data Tests")
-# print("####################")
-# X, Y = getData('Data/dataset1/NonlinearX.csv', 'Data/dataset1/NonlinearY.csv')
-# splits = splitData(X, Y)
-# 
-# HNodes = 5
-# ONodes = 2
-# activate = sigmoid
-# deltaActivate = delta_sigmoid
-# learningRate = 1
-# epochs = 50
-# regLambda = 0
-# args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
-# 
-# for i, split in enumerate(splits):
-#   print('Beginning Split {}'.format(i+1))
-#   ytest = [] 
-#   ypredict = [] 
-#   train_set = split[0]
-#   XTrain = np.array([X[index] for index in train_set])
-#   YTrain = np.array([Y[index] for index in train_set])
-#   model = train(XTrain, YTrain, args)
-# 
-#   test_set = split[1]
-#   XTest = np.array([X[index] for index in test_set])
-#   YTest = np.array([Y[index] for index in test_set])
-#   predicts = test(XTest, model)
-#   accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
-#   print('Split {} Accuracy: {}\n'.format(i+1, accuracy))
-#   ytest.append(YTest)
-#   ypredict.append(predicts)
-#   
-# perform = getPerformanceScores(ytest, ypredict)
-# print('Confusion Matrix: ')
-# print(perform['CM'])
-# print('Accuracy: ', perform['accuracy'])
-# print('Precision: ', perform['precision'])
-# print('Recall: ', perform['recall'])
-# print('F1 Score', perform['f1'])
-# =============================================================================
-
-print("################")
-print("Digit Data Tests")
-print("################")
-XTrain, YTrain = getData('Data/dataset2/Digit_X_train.csv', 'Data/dataset2/Digit_y_train.csv')
-XTest, YTest = getData('Data/dataset2/Digit_X_test.csv', 'Data/dataset2/Digit_y_test.csv')
-
-HNodes = 7
-ONodes = 10
+HNodes = 5
+ONodes = 2
 activate = sigmoid
 deltaActivate = delta_sigmoid
 learningRate = 1
@@ -390,14 +306,107 @@ epochs = 50
 regLambda = 0
 args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
 
-model = train(XTrain, YTrain, args)
-predicts = test(XTest, model)
-accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
-print('Accuracy: {}\n'.format(accuracy))
-perform = getPerformanceScores(YTest, predicts)
+for i, split in enumerate(splits):
+  print('Beginning Split {}'.format(i+1))
+  ytest = [] 
+  ypredict = [] 
+  train_set = split[0]
+  XTrain = np.array([X[index] for index in train_set])
+  YTrain = np.array([Y[index] for index in train_set])
+  model = train(XTrain, YTrain, args)
+
+  test_set = split[1]
+  XTest = np.array([X[index] for index in test_set])
+  YTest = np.array([Y[index] for index in test_set])
+  predicts = test(XTest, model)
+  accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
+  print('Split {} Accuracy: {}\n'.format(i+1, accuracy))
+  ytest.append(YTest)
+  ypredict.append(predicts)
+  
+perform = getPerformanceScores(ytest, ypredict)
 print('Confusion Matrix: ')
 print(perform['CM'])
 print('Accuracy: ', perform['accuracy'])
 print('Precision: ', perform['precision'])
 print('Recall: ', perform['recall'])
 print('F1 Score', perform['f1'])
+
+
+print("####################")
+print("Nonlinear Data Tests")
+print("####################")
+X, Y = getData('Data/dataset1/NonlinearX.csv', 'Data/dataset1/NonlinearY.csv')
+splits = splitData(X, Y)
+
+HNodes = 5
+ONodes = 2
+activate = sigmoid
+deltaActivate = delta_sigmoid
+learningRate = 1
+epochs = 50
+regLambda = 0
+args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
+
+for i, split in enumerate(splits):
+  print('Beginning Split {}'.format(i+1))
+  ytest = [] 
+  ypredict = [] 
+  train_set = split[0]
+  XTrain = np.array([X[index] for index in train_set])
+  YTrain = np.array([Y[index] for index in train_set])
+  model = train(XTrain, YTrain, args)
+
+  test_set = split[1]
+  XTest = np.array([X[index] for index in test_set])
+  YTest = np.array([Y[index] for index in test_set])
+  predicts = test(XTest, model)
+  accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
+  print('Split {} Accuracy: {}\n'.format(i+1, accuracy))
+  ytest.append(YTest)
+  ypredict.append(predicts)
+  
+perform = getPerformanceScores(ytest, ypredict)
+print('Confusion Matrix: ')
+print(perform['CM'])
+print('Accuracy: ', perform['accuracy'])
+print('Precision: ', perform['precision'])
+print('Recall: ', perform['recall'])
+print('F1 Score', perform['f1'])
+
+
+#print("################")
+#print("Digit Data Tests")
+#print("################")
+#XTrain, YTrain = getData('Data/dataset2/Digit_X_train.csv', 'Data/dataset2/Digit_y_train.csv')
+#XTest, YTest = getData('Data/dataset2/Digit_X_test.csv', 'Data/dataset2/Digit_y_test.csv')
+#
+#print('xtrain', XTrain.shape) 
+#print('ytrain', YTrain.shape) 
+#print('xtest', XTest.shape) 
+#print('ytest', YTest.shape) 
+#
+#
+#HNodes = 7
+#ONodes = 10
+#activate = sigmoid
+#deltaActivate = delta_sigmoid
+#learningRate = 1
+#epochs = 50
+#regLambda = 0
+#args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
+#
+#model = train(XTrain, YTrain, args)
+#predicts = test(XTest, model)
+#accuracy = sum([1 for i in range(len(predicts)) if predicts[i] == YTest[i]]) / len(predicts)
+#print('Accuracy: {}\n'.format(accuracy))
+#
+#print("this is they ytest shape: ",YTest.shape)
+#print('this is the predicts shape: ', predicts)
+#perform = getPerformanceScores(YTest, predicts)
+#print('Confusion Matrix: ')
+#print(perform['CM'])
+#print('Accuracy: ', perform['accuracy'])
+#print('Precision: ', perform['precision'])
+#print('Recall: ', perform['recall'])
+#print('F1 Score', perform['f1'])
