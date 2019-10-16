@@ -376,13 +376,13 @@ print("################")
 XTrain, YTrain = getData('Data/dataset2/Digit_X_train.csv', 'Data/dataset2/Digit_y_train.csv')
 XTest, YTest = getData('Data/dataset2/Digit_X_test.csv', 'Data/dataset2/Digit_y_test.csv')
 
-HNodes = 10
+HNodes = 37
 ONodes = 10
 activate = sigmoid
 deltaActivate = delta_sigmoid
-learningRate = 1
-epochs = 100
-regLambda = 0.001
+learningRate = 0.5
+epochs = 500
+regLambda = 0.005
 args = (HNodes, ONodes, activate, deltaActivate, learningRate, epochs, regLambda)
 
 model = train(XTrain, YTrain, args, False) # don't plot
