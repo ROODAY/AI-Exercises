@@ -6,19 +6,19 @@ public class runTicTacToe {
 	private List<List<positionTicTacToe>>  winningLines = new ArrayList<>(); 
 	private List<positionTicTacToe> board = new ArrayList<>();
 	private aiTicTacToe ai1;
-	private aiTicTacToe ai2;
+	private aiRandom ai2;
 	
 	public int result;
 	public runTicTacToe()
 	{
 		//initialize winning lines
 		winningLines = initializeWinningLines();
-		//initialzie board
+		//initialize board
 		board = createTicTacToeBoard();
 		
 		//initialize AI players
 		ai1 = new aiTicTacToe(1);
-		ai2 = new aiTicTacToe(2);
+		ai2 = new aiRandom(2);
 	}
 	private List<positionTicTacToe> createTicTacToeBoard()
 	{

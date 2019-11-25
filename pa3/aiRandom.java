@@ -1,74 +1,30 @@
 import java.util.*;
-import java.util.stream.Collectors;
-
-class aiTicTacToe {
+class aiRandom {
 
 	private int player; //1 for player 1 and 2 for player 2
-	private List<List<positionTicTacToe>> winningLines;
 	private int getStateOfPositionFromBoard(positionTicTacToe position, List<positionTicTacToe> board)
 	{
 		//a helper function to get state of a certain position in the Tic-Tac-Toe board by given position TicTacToe
 		int index = position.x*16+position.y*4+position.z;
 		return board.get(index).state;
 	}
-	private int heuristic(List<positionTicTacToe> board, int player) {
-		int other = player == 1 ? 2 : 1;
-
-		int playerScore = 0;
-		int otherScore = 0;
-		for (List<positionTicTacToe> winningLine : winningLines) {
-			int playerSpots = (int) winningLine.stream().filter(pos -> pos.state == player).count();
-
-			switch (playerSpots) {
-				case 4:
-					playerScore += 1000;
-					break;
-				case 3:
-					playerScore += 100;
-					break;
-				case 2:
-					playerScore += 10;
-					break;
-				case 1:
-					playerScore += 1;
-					break;
-			}
-
-			int otherSpots = (int) winningLine.stream().filter(pos -> pos.state == other).count();
-			switch (otherSpots) {
-				case 4:
-					otherScore += 1000;
-					break;
-				case 3:
-					otherScore += 100;
-					break;
-				case 2:
-					otherScore += 10;
-					break;
-				case 1:
-					otherScore += 1;
-					break;
-			}
-		}
-
-		return playerScore - otherScore;
-	}
 	positionTicTacToe myAIAlgorithm(List<positionTicTacToe> board, int player)
 	{
-		positionTicTacToe myNextMove = null;
+
+		//TODO: this is where you are going to implement your AI algorithm to win the game. The default is an AI randomly choose any available move.
+		positionTicTacToe myNextMove;
 		
-		int bestMove = Integer.MIN_VALUE;
-		List<positionTicTacToe> availableMoves = getAvailableMoves(board);
-		for (positionTicTacToe move : availableMoves) {
-			List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
-			makeMove(move, player, b);
-			int score = heuristic(b, player);
-			if (score > bestMove) {
-				bestMove = score;
-				myNextMove = move;
-			}
-		}
+		do
+			{
+				Random rand = new Random();
+				int x = rand.nextInt(4);
+				int y = rand.nextInt(4);
+				int z = rand.nextInt(4);
+				myNextMove = new positionTicTacToe(x,y,z);
+			} while(getStateOfPositionFromBoard(myNextMove,board)!=0);
 		return myNextMove;
+			
+		
 	}
 	private List<List<positionTicTacToe>> initializeWinningLines()
 	{
@@ -206,91 +162,8 @@ class aiTicTacToe {
 		return winningLines;
 		
 	}
-	private int isEnded(List<List<positionTicTacToe>> winningLines, List<positionTicTacToe> board)
-	{
-		//test whether the current game is ended
-
-		//brute-force
-		for(int i=0;i<winningLines.size();i++)
-		{
-
-			positionTicTacToe p0 = winningLines.get(i).get(0);
-			positionTicTacToe p1 = winningLines.get(i).get(1);
-			positionTicTacToe p2 = winningLines.get(i).get(2);
-			positionTicTacToe p3 = winningLines.get(i).get(3);
-
-			int state0 = getStateOfPositionFromBoard(p0,board);
-			int state1 = getStateOfPositionFromBoard(p1,board);
-			int state2 = getStateOfPositionFromBoard(p2,board);
-			int state3 = getStateOfPositionFromBoard(p3,board);
-
-			//if they have the same state (marked by same player) and they are not all marked.
-			if(state0 == state1 && state1 == state2 && state2 == state3 && state0!=0)
-			{
-				//someone wins
-				p0.state = state0;
-				p1.state = state1;
-				p2.state = state2;
-				p3.state = state3;
-
-				//print the satisified winning line (one of them if there are several)
-				p0.printPosition();
-				p1.printPosition();
-				p2.printPosition();
-				p3.printPosition();
-				return state0;
-			}
-		}
-		for(int i=0;i<board.size();i++)
-		{
-			if(board.get(i).state==0)
-			{
-				//game is not ended, continue
-				return 0;
-			}
-		}
-		return -1; //call it a draw
-	}
-	public boolean makeMove(positionTicTacToe position, int player, List<positionTicTacToe> targetBoard)
-	{
-		//make move on Tic-Tac-Toe board, given position and player
-		//player 1 = 1, player 2 = 2
-
-		//brute force (obviously not a wise way though)
-		for(int i=0;i<targetBoard.size();i++)
-		{
-			if(targetBoard.get(i).x==position.x && targetBoard.get(i).y==position.y && targetBoard.get(i).z==position.z) //if this is the position
-			{
-				if(targetBoard.get(i).state==0)
-				{
-					targetBoard.get(i).state = player;
-					return true;
-				}
-				else
-				{
-					System.out.println("Error: this is not a valid move.");
-				}
-			}
-
-		}
-		return false;
-	}
-	private List<positionTicTacToe> deepCopyATicTacToeBoard(List<positionTicTacToe> board)
-	{
-		//deep copy of game boards
-		List<positionTicTacToe> copiedBoard = new ArrayList<positionTicTacToe>();
-		for(int i=0;i<board.size();i++)
-		{
-			copiedBoard.add(new positionTicTacToe(board.get(i).x,board.get(i).y,board.get(i).z,board.get(i).state));
-		}
-		return copiedBoard;
-	}
-	private List<positionTicTacToe> getAvailableMoves(List<positionTicTacToe> board) {
-		return board.stream().filter(pos -> pos.state == 0).collect(Collectors.toList());
-	}
-	aiTicTacToe(int setPlayer)
+	aiRandom(int setPlayer)
 	{
 		player = setPlayer;
-		winningLines = initializeWinningLines();
 	}
 }
