@@ -20,7 +20,7 @@ public class aiTicTacToe {
 				int y = rand.nextInt(4);
 				int z = rand.nextInt(4);
 				myNextMove = new positionTicTacToe(x,y,z);
-			}while(getStateOfPositionFromBoard(myNextMove,board)!=0);
+			} while(getStateOfPositionFromBoard(myNextMove,board)!=0);
 		return myNextMove;
 			
 		
