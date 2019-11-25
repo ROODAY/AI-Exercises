@@ -13,12 +13,15 @@ class aiTicTacToe {
 	}
 	private int heuristic(List<positionTicTacToe> board, int player) {
 		int other = player == 1 ? 2 : 1;
-
 		int playerScore = 0;
 		int otherScore = 0;
 		for (List<positionTicTacToe> winningLine : winningLines) {
-			int playerSpots = (int) winningLine.stream().filter(pos -> pos.state == player).count();
+			List<Integer> states = new ArrayList<>();
+			for (positionTicTacToe pos : winningLine) {
+				states.add(getStateOfPositionFromBoard(pos,board));
+			}
 
+			int playerSpots = (int) states.stream().filter(state -> state == player).count();
 			switch (playerSpots) {
 				case 4:
 					playerScore += 1000;
@@ -34,7 +37,7 @@ class aiTicTacToe {
 					break;
 			}
 
-			int otherSpots = (int) winningLine.stream().filter(pos -> pos.state == other).count();
+			int otherSpots = (int) states.stream().filter(state -> state == other).count();
 			switch (otherSpots) {
 				case 4:
 					otherScore += 1000;
@@ -73,14 +76,14 @@ class aiTicTacToe {
 	private List<List<positionTicTacToe>> initializeWinningLines()
 	{
 		//create a list of winning line so that the game will "brute-force" check if a player satisfied any 	winning condition(s).
-		List<List<positionTicTacToe>> winningLines = new ArrayList<List<positionTicTacToe>>();
+		List<List<positionTicTacToe>> winningLines = new ArrayList<>();
 		
 		//48 straight winning lines
 		//z axis winning lines
 		for(int i = 0; i<4; i++)
 			for(int j = 0; j<4;j++)
 			{
-				List<positionTicTacToe> oneWinCondition = new ArrayList<positionTicTacToe>();
+				List<positionTicTacToe> oneWinCondition = new ArrayList<>();
 				oneWinCondition.add(new positionTicTacToe(i,j,0,-1));
 				oneWinCondition.add(new positionTicTacToe(i,j,1,-1));
 				oneWinCondition.add(new positionTicTacToe(i,j,2,-1));
@@ -91,7 +94,7 @@ class aiTicTacToe {
 		for(int i = 0; i<4; i++)
 			for(int j = 0; j<4;j++)
 			{
-				List<positionTicTacToe> oneWinCondition = new ArrayList<positionTicTacToe>();
+				List<positionTicTacToe> oneWinCondition = new ArrayList<>();
 				oneWinCondition.add(new positionTicTacToe(i,0,j,-1));
 				oneWinCondition.add(new positionTicTacToe(i,1,j,-1));
 				oneWinCondition.add(new positionTicTacToe(i,2,j,-1));
@@ -102,7 +105,7 @@ class aiTicTacToe {
 		for(int i = 0; i<4; i++)
 			for(int j = 0; j<4;j++)
 			{
-				List<positionTicTacToe> oneWinCondition = new ArrayList<positionTicTacToe>();
+				List<positionTicTacToe> oneWinCondition = new ArrayList<>();
 				oneWinCondition.add(new positionTicTacToe(0,i,j,-1));
 				oneWinCondition.add(new positionTicTacToe(1,i,j,-1));
 				oneWinCondition.add(new positionTicTacToe(2,i,j,-1));
@@ -114,7 +117,7 @@ class aiTicTacToe {
 		//xz plane-4
 		for(int i = 0; i<4; i++)
 			{
-				List<positionTicTacToe> oneWinCondition = new ArrayList<positionTicTacToe>();
+				List<positionTicTacToe> oneWinCondition = new ArrayList<>();
 				oneWinCondition.add(new positionTicTacToe(0,i,0,-1));
 				oneWinCondition.add(new positionTicTacToe(1,i,1,-1));
 				oneWinCondition.add(new positionTicTacToe(2,i,2,-1));
@@ -124,7 +127,7 @@ class aiTicTacToe {
 		//yz plane-4
 		for(int i = 0; i<4; i++)
 			{
-				List<positionTicTacToe> oneWinCondition = new ArrayList<positionTicTacToe>();
+				List<positionTicTacToe> oneWinCondition = new ArrayList<>();
 				oneWinCondition.add(new positionTicTacToe(i,0,0,-1));
 				oneWinCondition.add(new positionTicTacToe(i,1,1,-1));
 				oneWinCondition.add(new positionTicTacToe(i,2,2,-1));
@@ -134,7 +137,7 @@ class aiTicTacToe {
 		//xy plane-4
 		for(int i = 0; i<4; i++)
 			{
-				List<positionTicTacToe> oneWinCondition = new ArrayList<positionTicTacToe>();
+				List<positionTicTacToe> oneWinCondition = new ArrayList<>();
 				oneWinCondition.add(new positionTicTacToe(0,0,i,-1));
 				oneWinCondition.add(new positionTicTacToe(1,1,i,-1));
 				oneWinCondition.add(new positionTicTacToe(2,2,i,-1));
@@ -146,7 +149,7 @@ class aiTicTacToe {
 		//xz plane-4
 		for(int i = 0; i<4; i++)
 			{
-				List<positionTicTacToe> oneWinCondition = new ArrayList<positionTicTacToe>();
+				List<positionTicTacToe> oneWinCondition = new ArrayList<>();
 				oneWinCondition.add(new positionTicTacToe(0,i,3,-1));
 				oneWinCondition.add(new positionTicTacToe(1,i,2,-1));
 				oneWinCondition.add(new positionTicTacToe(2,i,1,-1));
@@ -156,7 +159,7 @@ class aiTicTacToe {
 		//yz plane-4
 		for(int i = 0; i<4; i++)
 			{
-				List<positionTicTacToe> oneWinCondition = new ArrayList<positionTicTacToe>();
+				List<positionTicTacToe> oneWinCondition = new ArrayList<>();
 				oneWinCondition.add(new positionTicTacToe(i,0,3,-1));
 				oneWinCondition.add(new positionTicTacToe(i,1,2,-1));
 				oneWinCondition.add(new positionTicTacToe(i,2,1,-1));
@@ -166,7 +169,7 @@ class aiTicTacToe {
 		//xy plane-4
 		for(int i = 0; i<4; i++)
 			{
-				List<positionTicTacToe> oneWinCondition = new ArrayList<positionTicTacToe>();
+				List<positionTicTacToe> oneWinCondition = new ArrayList<>();
 				oneWinCondition.add(new positionTicTacToe(0,3,i,-1));
 				oneWinCondition.add(new positionTicTacToe(1,2,i,-1));
 				oneWinCondition.add(new positionTicTacToe(2,1,i,-1));
@@ -175,28 +178,28 @@ class aiTicTacToe {
 			}
 		
 		//4 additional diagonal winning lines
-		List<positionTicTacToe> oneWinCondition = new ArrayList<positionTicTacToe>();
+		List<positionTicTacToe> oneWinCondition = new ArrayList<>();
 		oneWinCondition.add(new positionTicTacToe(0,0,0,-1));
 		oneWinCondition.add(new positionTicTacToe(1,1,1,-1));
 		oneWinCondition.add(new positionTicTacToe(2,2,2,-1));
 		oneWinCondition.add(new positionTicTacToe(3,3,3,-1));
 		winningLines.add(oneWinCondition);
 		
-		oneWinCondition = new ArrayList<positionTicTacToe>();
+		oneWinCondition = new ArrayList<>();
 		oneWinCondition.add(new positionTicTacToe(0,0,3,-1));
 		oneWinCondition.add(new positionTicTacToe(1,1,2,-1));
 		oneWinCondition.add(new positionTicTacToe(2,2,1,-1));
 		oneWinCondition.add(new positionTicTacToe(3,3,0,-1));
 		winningLines.add(oneWinCondition);
 		
-		oneWinCondition = new ArrayList<positionTicTacToe>();
+		oneWinCondition = new ArrayList<>();
 		oneWinCondition.add(new positionTicTacToe(3,0,0,-1));
 		oneWinCondition.add(new positionTicTacToe(2,1,1,-1));
 		oneWinCondition.add(new positionTicTacToe(1,2,2,-1));
 		oneWinCondition.add(new positionTicTacToe(0,3,3,-1));
 		winningLines.add(oneWinCondition);
 		
-		oneWinCondition = new ArrayList<positionTicTacToe>();
+		oneWinCondition = new ArrayList<>();
 		oneWinCondition.add(new positionTicTacToe(0,3,0,-1));
 		oneWinCondition.add(new positionTicTacToe(1,2,1,-1));
 		oneWinCondition.add(new positionTicTacToe(2,1,2,-1));
@@ -251,7 +254,7 @@ class aiTicTacToe {
 		}
 		return -1; //call it a draw
 	}
-	public boolean makeMove(positionTicTacToe position, int player, List<positionTicTacToe> targetBoard)
+	private void makeMove(positionTicTacToe position, int player, List<positionTicTacToe> targetBoard)
 	{
 		//make move on Tic-Tac-Toe board, given position and player
 		//player 1 = 1, player 2 = 2
@@ -264,7 +267,7 @@ class aiTicTacToe {
 				if(targetBoard.get(i).state==0)
 				{
 					targetBoard.get(i).state = player;
-					return true;
+					return;
 				}
 				else
 				{
@@ -273,15 +276,13 @@ class aiTicTacToe {
 			}
 
 		}
-		return false;
 	}
 	private List<positionTicTacToe> deepCopyATicTacToeBoard(List<positionTicTacToe> board)
 	{
 		//deep copy of game boards
 		List<positionTicTacToe> copiedBoard = new ArrayList<positionTicTacToe>();
-		for(int i=0;i<board.size();i++)
-		{
-			copiedBoard.add(new positionTicTacToe(board.get(i).x,board.get(i).y,board.get(i).z,board.get(i).state));
+		for (positionTicTacToe positionTicTacToe : board) {
+			copiedBoard.add(new positionTicTacToe(positionTicTacToe.x, positionTicTacToe.y, positionTicTacToe.z, positionTicTacToe.state));
 		}
 		return copiedBoard;
 	}
