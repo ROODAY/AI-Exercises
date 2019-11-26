@@ -5,6 +5,7 @@ class aiTicTacToe {
 
 	private int player; //1 for player 1 and 2 for player 2
 	private int MAX_DEPTH;
+	private int depth = 0;
 	private List<List<positionTicTacToe>> winningLines;
 	private int considered = 0;
 	private int getStateOfPositionFromBoard(positionTicTacToe position, List<positionTicTacToe> board)
@@ -58,41 +59,36 @@ class aiTicTacToe {
 
 		return playerScore - otherScore;
 	}
-	private int minimax(List<positionTicTacToe> board, int player, int depth, int alpha, int beta) {
-		boolean maximizer = depth % 2 == 0;
+	private int minimax(List<positionTicTacToe> board, int curPlayer, int alpha, int beta) {
 		considered++;
-		if (depth == MAX_DEPTH) {
-			return heuristic(board, player);
+		int other = player == 1 ? 2 : 1;
+		if (depth >= MAX_DEPTH) {
+			return heuristic(board, curPlayer);
 		}
+		depth++;
 
-		int bestScore;
-		positionTicTacToe bestMove;
 		List<positionTicTacToe> availableMoves = getAvailableMoves(board);
-		if (maximizer) {
-			bestScore = Integer.MIN_VALUE;
+		if (curPlayer == player) {
 			for (positionTicTacToe move : availableMoves) {
 				List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
-				makeMove(move, player, b);
+				makeMove(move, curPlayer, b);
 				if (isEnded(b)) {
 					return 1000;
 				}
-				bestScore = Math.max(bestScore, minimax(b, player, depth+1, alpha, beta));
-				alpha = Math.max(alpha, bestScore);
+				alpha = Math.max(alpha, minimax(b, other, alpha, beta));
 				if (alpha > beta) {
 					break;
 				}
 			}
 			return alpha;
 		} else {
-			bestScore = Integer.MAX_VALUE;
 			for (positionTicTacToe move : availableMoves) {
 				List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
-				makeMove(move, player, b);
+				makeMove(move, curPlayer, b);
 				if (isEnded(b)) {
 					return -1000;
 				}
-				bestScore = Math.min(bestScore, minimax(b, player, depth+1, alpha, beta));
-				beta = Math.min(beta, bestScore);
+				beta = Math.min(beta, minimax(b, other, alpha, beta));
 				if (alpha > beta) {
 					break;
 				}
@@ -103,6 +99,7 @@ class aiTicTacToe {
 	positionTicTacToe myAIAlgorithm(List<positionTicTacToe> board, int player)
 	{
 		positionTicTacToe myNextMove = null;
+		int other = player == 1 ? 2 : 1;
 		
 		int bestMove = Integer.MIN_VALUE;
 		List<positionTicTacToe> availableMoves = getAvailableMoves(board);
@@ -110,7 +107,8 @@ class aiTicTacToe {
 		for (positionTicTacToe move : availableMoves) {
 			List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
 			makeMove(move, player, b);
-			int score = minimax(b, player, 1, Integer.MIN_VALUE, Integer.MAX_VALUE);
+			int score = minimax(b, other, Integer.MIN_VALUE, Integer.MAX_VALUE);
+			depth = 0;
 			if (score > bestMove) {
 				bestMove = score;
 				myNextMove = move;
