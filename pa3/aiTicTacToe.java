@@ -2,10 +2,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 class aiTicTacToe {
+	private final boolean DEBUG = true;
 	private int considered = 0;
 	private int player; // 1 for player 1 and 2 for player 2
 	private int MAX_DEPTH; // Controls how far the AI will lookahead (depth starts at 0)
-	private List<List<positionTicTacToe>> winningLines;
+	private List<List<positionTicTacToe>> winningLines; // Used for evaluating game boards
 
 	// Helper function to get state of a certain position in the Tic-Tac-Toe board by given position TicTacToe
 	private int getStateOfPositionFromBoard(positionTicTacToe position, List<positionTicTacToe> board) {
@@ -126,7 +127,7 @@ class aiTicTacToe {
 			}
 		}
 
-		System.out.println("Player " + player + " considered " + considered + " moves.");
+		if (DEBUG) System.out.println("Player " + player + " considered " + considered + " moves.");
 		return myNextMove;
 	}
 
