@@ -63,38 +63,27 @@ class aiTicTacToe {
 		considered++;
 		int other = player == 1 ? 2 : 1;
 		if (depth >= MAX_DEPTH) {
-			return heuristic(board, curPlayer);
+			return heuristic(board, player);
 		}
 		depth++;
 
 		List<positionTicTacToe> availableMoves = getAvailableMoves(board);
-		if (curPlayer == player) {
-			for (positionTicTacToe move : availableMoves) {
-				List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
-				makeMove(move, curPlayer, b);
-				if (isEnded(b)) {
-					return 1000;
-				}
+		for (positionTicTacToe move : availableMoves) {
+			List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
+			makeMove(move, curPlayer, b);
+			if (curPlayer == player) {
+				if (isEnded(b)) return 1000;
 				alpha = Math.max(alpha, minimax(b, other, alpha, beta));
-				if (alpha > beta) {
-					break;
-				}
-			}
-			return alpha;
-		} else {
-			for (positionTicTacToe move : availableMoves) {
-				List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
-				makeMove(move, curPlayer, b);
-				if (isEnded(b)) {
-					return -1000;
-				}
+			} else {
+				if (isEnded(b)) return -1000;
 				beta = Math.min(beta, minimax(b, other, alpha, beta));
-				if (alpha > beta) {
-					break;
-				}
 			}
-			return beta;
+			if (alpha > beta) {
+				break;
+			}
 		}
+
+		return curPlayer == player ? alpha : beta;
 	}
 	positionTicTacToe myAIAlgorithm(List<positionTicTacToe> board, int player)
 	{
@@ -114,7 +103,7 @@ class aiTicTacToe {
 				myNextMove = move;
 			}
 		}
-		System.out.println("Player " + player + " considered " + considered + " moves.");
+		//System.out.println("Player " + player + " considered " + considered + " moves.");
 		return myNextMove;
 	}
 	private List<List<positionTicTacToe>> initializeWinningLines()

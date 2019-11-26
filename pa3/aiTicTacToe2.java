@@ -45,7 +45,7 @@ public class aiTicTacToe2 {
 					}
 				}
 		positionTicTacToe myNextMove = new positionTicTacToe(bestScorex,bestScorey,bestScorez,player);
-		System.out.println("Player " + player + " considered " + considered + " moves.");
+		//System.out.println("Player " + player + " considered " + considered + " moves.");
 		return myNextMove;
 	}
 	private int heuristic(List<positionTicTacToe> copiedBoard)
