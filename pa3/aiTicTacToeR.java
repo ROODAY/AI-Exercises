@@ -1,5 +1,5 @@
 import java.util.*;
-class aiRandom {
+class aiTicTacToeR {
 
 	private int player; //1 for player 1 and 2 for player 2
 	private int getStateOfPositionFromBoard(positionTicTacToe position, List<positionTicTacToe> board)
@@ -162,7 +162,7 @@ class aiRandom {
 		return winningLines;
 		
 	}
-	aiRandom(int setPlayer)
+	aiTicTacToeR(int setPlayer)
 	{
 		player = setPlayer;
 	}
