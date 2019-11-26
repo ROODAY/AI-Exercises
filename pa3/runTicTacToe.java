@@ -19,7 +19,7 @@ public class runTicTacToe {
 		board = createTicTacToeBoard();
 		
 		//initialize AI players
-		ai1 = new aiTicTacToe(1, 0);
+		ai1 = new aiTicTacToe(1,2);
 		ai2 = new aiTicTacToeR(2);
 	}
 
@@ -347,6 +347,7 @@ public class runTicTacToe {
 		{
 			//game ends, player 1 wins 
 			System.out.println("Player1 Wins");
+			//ai1.printStats();
 			p1Wins++;
 			//printBoardTicTacToe(board);
 		}
@@ -354,6 +355,7 @@ public class runTicTacToe {
 		{
 			//game ends, player 1 wins 
 			System.out.println("Player2 Wins");
+			//ai1.printStats();
 			p2Wins++;
 			//printBoardTicTacToe(board);
 		}
@@ -375,7 +377,7 @@ public class runTicTacToe {
 	public static void main(String[] args) {		
 		double totalTime = 0;
 		//run game loop
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 100; i++) {
 			long start = System.nanoTime();
 			runTicTacToe rttt = new runTicTacToe();
 			rttt.run();
@@ -387,6 +389,6 @@ public class runTicTacToe {
 		System.out.println("P1 Wins: " + p1Wins);
 		System.out.println("P2 Wins: " + p2Wins);
 		System.out.println("  Draws: " + draws);
-		System.out.println("Average time: " + totalTime / 10.0);
+		System.out.println("Average time: " + totalTime / 100.0);
 	}
 }

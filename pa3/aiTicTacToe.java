@@ -2,11 +2,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 class aiTicTacToe {
-	private final boolean DEBUG = true;
+	private final boolean DEBUG = false;
 	private int considered = 0;
 	private int player; // 1 for player 1 and 2 for player 2
-	private int MAX_DEPTH; // Controls how far the AI will lookahead (depth starts at 0)
+	private int MAX_DEPTH; // Controls how far the AI will lookahead
 	private List<List<positionTicTacToe>> winningLines; // Used for evaluating game boards
+	private double totalTime = 0; // For stats
+	private double totalMoves = 0; // For stats
 
 	// Helper function to get state of a certain position in the Tic-Tac-Toe board by given position TicTacToe
 	private int getStateOfPositionFromBoard(positionTicTacToe position, List<positionTicTacToe> board) {
@@ -92,7 +94,7 @@ class aiTicTacToe {
 		// Recurse down the appropriate path, depending on maximizer or minimizer (maximizer is 'player')
 		int other = player == 1 ? 2 : 1;
 		if (curPlayer == player) {
-			if (isEnded(bestPath)) return 1000000; // Greatly value boards where maximizer wins
+			if (isEnded(bestPath)) return Integer.MAX_VALUE; // Greatly value boards where maximizer wins
 			return Math.max(Collections.max(scores), minimax(bestPath, other, depth+1));
 		} else {
 			if (isEnded(bestPath)) return Integer.MIN_VALUE; // Avoid boards where minimizer wins
@@ -102,6 +104,7 @@ class aiTicTacToe {
 
 	// Base function that calls minimax algorithm
 	positionTicTacToe myAIAlgorithm(List<positionTicTacToe> board, int player) {
+		long start = System.nanoTime();
 		considered = 0;
 		positionTicTacToe myNextMove = null;
 		int other = player == 1 ? 2 : 1;
@@ -127,7 +130,11 @@ class aiTicTacToe {
 			}
 		}
 
+		// Keep track of statistics
 		if (DEBUG) System.out.println("Player " + player + " considered " + considered + " moves.");
+		long elapsedTime = System.nanoTime() - start;
+		totalTime += (double) elapsedTime / 1_000_000_000.0;
+		totalMoves += 1.0;
 		return myNextMove;
 	}
 
@@ -309,6 +316,11 @@ class aiTicTacToe {
 	// Filters board to return only empty positions
 	private List<positionTicTacToe> getAvailableMoves(List<positionTicTacToe> board) {
 		return board.stream().filter(pos -> pos.state == 0).collect(Collectors.toList());
+	}
+
+	 // Helper function to print out average thinking time
+	void printStats() {
+		System.out.println("Average thinking time (seconds): " + totalTime/totalMoves);
 	}
 
 	// Initialize agent with depth
