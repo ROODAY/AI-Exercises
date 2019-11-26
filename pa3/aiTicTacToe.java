@@ -4,7 +4,9 @@ import java.util.stream.Collectors;
 class aiTicTacToe {
 
 	private int player; //1 for player 1 and 2 for player 2
+	private final int MAX_DEPTH = 3;
 	private List<List<positionTicTacToe>> winningLines;
+	private int considered = 0;
 	private int getStateOfPositionFromBoard(positionTicTacToe position, List<positionTicTacToe> board)
 	{
 		//a helper function to get state of a certain position in the Tic-Tac-Toe board by given position TicTacToe
@@ -56,21 +58,51 @@ class aiTicTacToe {
 
 		return playerScore - otherScore;
 	}
+	private int minimax(List<positionTicTacToe> board, int player, int depth) {
+		boolean maximizer = depth % 2 == 0;
+		considered++;
+		if (depth == MAX_DEPTH) {
+			return heuristic(board, player);
+		}
+
+		int bestScore;
+		positionTicTacToe bestMove;
+		List<positionTicTacToe> availableMoves = getAvailableMoves(board);
+		if (maximizer) {
+			bestScore = Integer.MIN_VALUE;
+			for (positionTicTacToe move : availableMoves) {
+				List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
+				makeMove(move, player, b);
+				bestScore = Math.max(bestScore, minimax(b, player, depth+1));
+			}
+			return bestScore;
+		} else {
+			bestScore = Integer.MAX_VALUE;
+			for (positionTicTacToe move : availableMoves) {
+				List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
+				makeMove(move, player, b);
+				bestScore = Math.min(bestScore, minimax(b, player, depth+1));
+			}
+			return bestScore;
+		}
+	}
 	positionTicTacToe myAIAlgorithm(List<positionTicTacToe> board, int player)
 	{
 		positionTicTacToe myNextMove = null;
 		
 		int bestMove = Integer.MIN_VALUE;
 		List<positionTicTacToe> availableMoves = getAvailableMoves(board);
+		considered = 0;
 		for (positionTicTacToe move : availableMoves) {
 			List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
 			makeMove(move, player, b);
-			int score = heuristic(b, player);
+			int score = minimax(b, player, 1);
 			if (score > bestMove) {
 				bestMove = score;
 				myNextMove = move;
 			}
 		}
+		System.out.println("Considered " + considered + " moves to decide.");
 		return myNextMove;
 	}
 	private List<List<positionTicTacToe>> initializeWinningLines()
