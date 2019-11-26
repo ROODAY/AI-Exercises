@@ -6,7 +6,7 @@ public class runTicTacToe {
 	private List<List<positionTicTacToe>>  winningLines = new ArrayList<>(); 
 	private List<positionTicTacToe> board = new ArrayList<>();
 	private aiTicTacToe ai1;
-	private aiRandom ai2;
+	private aiTicTacToe2 ai2;
 	
 	public int result;
 	public runTicTacToe()
@@ -17,8 +17,8 @@ public class runTicTacToe {
 		board = createTicTacToeBoard();
 		
 		//initialize AI players
-		ai1 = new aiTicTacToe(1);
-		ai2 = new aiRandom(2);
+		ai1 = new aiTicTacToe(1, 3);
+		ai2 = new aiTicTacToe2(2);
 	}
 	private List<positionTicTacToe> createTicTacToeBoard()
 	{

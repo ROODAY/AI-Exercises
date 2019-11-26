@@ -4,7 +4,7 @@ import java.util.stream.Collectors;
 class aiTicTacToe {
 
 	private int player; //1 for player 1 and 2 for player 2
-	private final int MAX_DEPTH = 3;
+	private int MAX_DEPTH;
 	private List<List<positionTicTacToe>> winningLines;
 	private int considered = 0;
 	private int getStateOfPositionFromBoard(positionTicTacToe position, List<positionTicTacToe> board)
@@ -58,7 +58,7 @@ class aiTicTacToe {
 
 		return playerScore - otherScore;
 	}
-	private int minimax(List<positionTicTacToe> board, int player, int depth) {
+	private int minimax(List<positionTicTacToe> board, int player, int depth, int alpha, int beta) {
 		boolean maximizer = depth % 2 == 0;
 		considered++;
 		if (depth == MAX_DEPTH) {
@@ -73,17 +73,31 @@ class aiTicTacToe {
 			for (positionTicTacToe move : availableMoves) {
 				List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
 				makeMove(move, player, b);
-				bestScore = Math.max(bestScore, minimax(b, player, depth+1));
+				if (isEnded(b)) {
+					return 1000;
+				}
+				bestScore = Math.max(bestScore, minimax(b, player, depth+1, alpha, beta));
+				alpha = Math.max(alpha, bestScore);
+				if (alpha > beta) {
+					break;
+				}
 			}
-			return bestScore;
+			return alpha;
 		} else {
 			bestScore = Integer.MAX_VALUE;
 			for (positionTicTacToe move : availableMoves) {
 				List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
 				makeMove(move, player, b);
-				bestScore = Math.min(bestScore, minimax(b, player, depth+1));
+				if (isEnded(b)) {
+					return -1000;
+				}
+				bestScore = Math.min(bestScore, minimax(b, player, depth+1, alpha, beta));
+				beta = Math.min(beta, bestScore);
+				if (alpha > beta) {
+					break;
+				}
 			}
-			return bestScore;
+			return beta;
 		}
 	}
 	positionTicTacToe myAIAlgorithm(List<positionTicTacToe> board, int player)
@@ -96,13 +110,13 @@ class aiTicTacToe {
 		for (positionTicTacToe move : availableMoves) {
 			List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
 			makeMove(move, player, b);
-			int score = minimax(b, player, 1);
+			int score = minimax(b, player, 1, Integer.MIN_VALUE, Integer.MAX_VALUE);
 			if (score > bestMove) {
 				bestMove = score;
 				myNextMove = move;
 			}
 		}
-		System.out.println("Considered " + considered + " moves to decide.");
+		System.out.println("Player " + player + " considered " + considered + " moves.");
 		return myNextMove;
 	}
 	private List<List<positionTicTacToe>> initializeWinningLines()
@@ -241,11 +255,12 @@ class aiTicTacToe {
 		return winningLines;
 		
 	}
-	private int isEnded(List<List<positionTicTacToe>> winningLines, List<positionTicTacToe> board)
+	private boolean isEnded(List<positionTicTacToe> board)
 	{
 		//test whether the current game is ended
 
 		//brute-force
+		boolean gameover = false;
 		for(int i=0;i<winningLines.size();i++)
 		{
 
@@ -262,29 +277,10 @@ class aiTicTacToe {
 			//if they have the same state (marked by same player) and they are not all marked.
 			if(state0 == state1 && state1 == state2 && state2 == state3 && state0!=0)
 			{
-				//someone wins
-				p0.state = state0;
-				p1.state = state1;
-				p2.state = state2;
-				p3.state = state3;
-
-				//print the satisified winning line (one of them if there are several)
-				p0.printPosition();
-				p1.printPosition();
-				p2.printPosition();
-				p3.printPosition();
-				return state0;
+				gameover = true;
 			}
 		}
-		for(int i=0;i<board.size();i++)
-		{
-			if(board.get(i).state==0)
-			{
-				//game is not ended, continue
-				return 0;
-			}
-		}
-		return -1; //call it a draw
+		return gameover;
 	}
 	private void makeMove(positionTicTacToe position, int player, List<positionTicTacToe> targetBoard)
 	{
@@ -321,9 +317,10 @@ class aiTicTacToe {
 	private List<positionTicTacToe> getAvailableMoves(List<positionTicTacToe> board) {
 		return board.stream().filter(pos -> pos.state == 0).collect(Collectors.toList());
 	}
-	aiTicTacToe(int setPlayer)
+	aiTicTacToe(int setPlayer, int setDepth)
 	{
 		player = setPlayer;
 		winningLines = initializeWinningLines();
+		MAX_DEPTH = setDepth;
 	}
 }

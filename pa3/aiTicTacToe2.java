@@ -4,6 +4,7 @@ public class aiTicTacToe2 {
 	public int player; //1 for player 1 and 2 for player 2
 	private List<List<positionTicTacToe>> winningLines;
 	private int lookAheadCounter;
+	private int considered = 0;
 	private int getStateOfPositionFromBoard(positionTicTacToe position, List<positionTicTacToe> board)
 	{
 		//a helper function to get state of a certain position in the Tic-Tac-Toe board by given position TicTacToe
@@ -22,7 +23,7 @@ public class aiTicTacToe2 {
 		int opponent = player == 1?2:1;
 		
 		bestScore = -1000;
-
+		considered = 0;
 		for(int i = 0; i<4; i++)
 			for(int j = 0; j<4;j++)
 				for(int k = 0; k<4;k++)
@@ -44,6 +45,7 @@ public class aiTicTacToe2 {
 					}
 				}
 		positionTicTacToe myNextMove = new positionTicTacToe(bestScorex,bestScorey,bestScorez,player);
+		System.out.println("Player " + player + " considered " + considered + " moves.");
 		return myNextMove;
 	}
 	private int heuristic(List<positionTicTacToe> copiedBoard)
@@ -276,7 +278,8 @@ public class aiTicTacToe2 {
 		int opponent = turn == 1?2:1;
 		int alpha = a;
 		int beta = b;
-		int totalLooksAhead = 2;
+		int totalLooksAhead = 3;
+		considered++;
 
 		if(lookAheadCounter <= totalLooksAhead)
 		{
