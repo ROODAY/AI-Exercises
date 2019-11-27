@@ -3,7 +3,7 @@ import java.util.stream.Collectors;
 
 class aiTicTacToe {
 	private boolean DEBUG = false; // Prints moves considered
-	private boolean USE_ALPHA_BETA = false; // Uses Alpha-Beta pruning over move ordering
+	private boolean USE_ALPHA_BETA = true; // Uses Alpha-Beta pruning over move ordering
 	private int MAX_DEPTH = 3; // Controls how far the AI will lookahead
 
 	private int player; // 1 for player 1 and 2 for player 2
@@ -73,7 +73,7 @@ class aiTicTacToe {
 		return boardScore;
 	}
 
-	// Implements minimax algorithm (pruning based on move ordering rather than alpha-beta)
+	// Minimax algorithm with move ordering pruning (less optimal but faster)
 	private int minimax(List<positionTicTacToe> board, int curPlayer, int depth) {
 		considered++;
 		// If at max depth, return value of the board
@@ -105,7 +105,7 @@ class aiTicTacToe {
 		}
 	}
 
-	// For reference, our original minimax function with Alpha-Beta pruning
+	// Minimax algorithm with Alpha-Beta pruning (slower but optimal solution)
 	private int minimax(List<positionTicTacToe> board, int curPlayer, int depth, int alpha, int beta) {
 		considered++;
 		// If at max depth, return value of the board
