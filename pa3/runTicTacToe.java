@@ -6,7 +6,7 @@ public class runTicTacToe {
 	private List<List<positionTicTacToe>>  winningLines;
 	private List<positionTicTacToe> board;
 	private aiTicTacToe ai1;
-	private aiTicTacToeR ai2;
+	private aiTicTacToe ai2;
 	private static int p1Wins = 0;
 	private static int p2Wins = 0;
 	private static int draws = 0;
@@ -20,7 +20,7 @@ public class runTicTacToe {
 		
 		//initialize AI players
 		ai1 = new aiTicTacToe(1, 3, true, true);
-		ai2 = new aiTicTacToeR(2);
+		ai2 = new aiTicTacToe(2, 3, true, true);
 	}
 
 	private List<positionTicTacToe> createTicTacToeBoard()
@@ -347,7 +347,7 @@ public class runTicTacToe {
 		{
 			//game ends, player 1 wins 
 			System.out.println("Player1 Wins");
-			//ai1.printStats();
+			ai1.printStats();
 			p1Wins++;
 			//printBoardTicTacToe(board);
 		}
@@ -355,7 +355,7 @@ public class runTicTacToe {
 		{
 			//game ends, player 1 wins 
 			System.out.println("Player2 Wins");
-			//ai1.printStats();
+			ai1.printStats();
 			p2Wins++;
 			//printBoardTicTacToe(board);
 		}
