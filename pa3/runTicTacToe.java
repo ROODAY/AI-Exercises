@@ -19,7 +19,7 @@ public class runTicTacToe {
 		board = createTicTacToeBoard();
 		
 		//initialize AI players
-		ai1 = new aiTicTacToe(1, 0);
+		ai1 = new aiTicTacToe(1);
 		ai2 = new aiTicTacToeR(2);
 	}
 
@@ -216,10 +216,10 @@ public class runTicTacToe {
 				p3.state = state3;
 
 				//print the satisified winning line (one of them if there are several)
-				//p0.printPosition();
-				//p1.printPosition();
-				//p2.printPosition();
-				//p3.printPosition();
+				p0.printPosition();
+				p1.printPosition();
+				p2.printPosition();
+				p3.printPosition();
 				return state0;
 			}
 		}
@@ -348,21 +348,21 @@ public class runTicTacToe {
 			//game ends, player 1 wins 
 			System.out.println("Player1 Wins");
 			p1Wins++;
-			//printBoardTicTacToe(board);
+			printBoardTicTacToe(board);
 		}
 		else if(result ==2)
 		{
 			//game ends, player 1 wins 
 			System.out.println("Player2 Wins");
 			p2Wins++;
-			//printBoardTicTacToe(board);
+			printBoardTicTacToe(board);
 		}
 		else if(result ==-1)
 		{
 			//game ends, it's a draw 
 			System.out.println("This is a draw.");
 			draws++;
-			//printBoardTicTacToe(board);
+			printBoardTicTacToe(board);
 		}
 		else
 		{
@@ -375,7 +375,7 @@ public class runTicTacToe {
 	public static void main(String[] args) {		
 		double totalTime = 0;
 		//run game loop
-		for (int i = 0; i < 10; i++) {
+		//for (int i = 0; i < 10; i++) {
 			long start = System.nanoTime();
 			runTicTacToe rttt = new runTicTacToe();
 			rttt.run();
@@ -383,10 +383,10 @@ public class runTicTacToe {
 			double seconds = (double) elapsedTime / 1_000_000_000.0;
 			System.out.println("Finished game in " + seconds + " seconds");
 			totalTime += seconds;
-		}
+		/*}
 		System.out.println("P1 Wins: " + p1Wins);
 		System.out.println("P2 Wins: " + p2Wins);
 		System.out.println("  Draws: " + draws);
-		System.out.println("Average time: " + totalTime / 10.0);
+		System.out.println("Average time: " + totalTime / 10.0);*/
 	}
 }
