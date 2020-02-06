@@ -2,11 +2,16 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 class aiTicTacToe {
-	private final boolean DEBUG = true;
-	private int considered = 0;
+	private boolean DEBUG = false; // Prints moves considered
+	private boolean USE_ALPHA_BETA = true; // Uses Alpha-Beta pruning over move ordering
+	private int MAX_DEPTH = 3; // Controls how far the AI will lookahead
+
 	private int player; // 1 for player 1 and 2 for player 2
-	private int MAX_DEPTH; // Controls how far the AI will lookahead (depth starts at 0)
 	private List<List<positionTicTacToe>> winningLines; // Used for evaluating game boards
+
+	private int considered = 0; // For stats
+	private double totalTime = 0; // For stats
+	private double totalMoves = 0; // For stats
 
 	// Helper function to get state of a certain position in the Tic-Tac-Toe board by given position TicTacToe
 	private int getStateOfPositionFromBoard(positionTicTacToe position, List<positionTicTacToe> board) {
@@ -68,7 +73,7 @@ class aiTicTacToe {
 		return boardScore;
 	}
 
-	// Implements minimax algorithm (pruning based on move ordering rather than alpha-beta)
+	// Minimax algorithm with move ordering pruning (less optimal but faster)
 	private int minimax(List<positionTicTacToe> board, int curPlayer, int depth) {
 		considered++;
 		// If at max depth, return value of the board
@@ -92,7 +97,7 @@ class aiTicTacToe {
 		// Recurse down the appropriate path, depending on maximizer or minimizer (maximizer is 'player')
 		int other = player == 1 ? 2 : 1;
 		if (curPlayer == player) {
-			if (isEnded(bestPath)) return 1000000; // Greatly value boards where maximizer wins
+			if (isEnded(bestPath)) return Integer.MAX_VALUE; // Greatly value boards where maximizer wins
 			return Math.max(Collections.max(scores), minimax(bestPath, other, depth+1));
 		} else {
 			if (isEnded(bestPath)) return Integer.MIN_VALUE; // Avoid boards where minimizer wins
@@ -100,8 +105,67 @@ class aiTicTacToe {
 		}
 	}
 
+	// Minimax algorithm with Alpha-Beta pruning (slower but optimal solution)
+	private int minimax(List<positionTicTacToe> board, int curPlayer, int depth, int alpha, int beta) {
+		considered++;
+		// If at max depth, return value of the board
+		if (depth == MAX_DEPTH) {
+			return heuristic(board);
+		}
+
+		// Store available moves
+		List<positionTicTacToe> availableMoves = getAvailableMoves(board);
+		int other = curPlayer == 1 ? 2 : 1;
+		if (curPlayer == player) { // If maximizer...
+			int bestScore = Integer.MIN_VALUE;
+			for (positionTicTacToe move : availableMoves) {
+				// Apply move
+				List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
+				makeMove(move, curPlayer, b);
+
+				// Break if game is over and return max value
+				if (isEnded(b)) {
+					return Integer.MAX_VALUE;
+				}
+
+				// Evaluate board with move and update alpha
+				bestScore = Math.max(bestScore, minimax(b, other, depth+1, alpha, beta));
+				alpha = Math.max(alpha, bestScore);
+
+				// Prune bad branches
+				if (alpha > beta) {
+					break;
+				}
+			}
+			return alpha;
+		} else {
+			int bestScore = Integer.MAX_VALUE;
+			for (positionTicTacToe move : availableMoves) {
+				// Apply move
+				List<positionTicTacToe> b = deepCopyATicTacToeBoard(board);
+				makeMove(move, curPlayer, b);
+
+				// Break if game is over and return min value
+				if (isEnded(b)) {
+					return Integer.MIN_VALUE;
+				}
+
+				// Evaluate board with move and update beta
+				bestScore = Math.min(bestScore, minimax(b, other, depth+1, alpha, beta));
+				beta = Math.min(beta, bestScore);
+
+				// Prune bad branches
+				if (alpha > beta) {
+					break;
+				}
+			}
+			return beta;
+		}
+	}
+
 	// Base function that calls minimax algorithm
 	positionTicTacToe myAIAlgorithm(List<positionTicTacToe> board, int player) {
+		long start = System.nanoTime();
 		considered = 0;
 		positionTicTacToe myNextMove = null;
 		int other = player == 1 ? 2 : 1;
@@ -120,14 +184,18 @@ class aiTicTacToe {
 				myNextMove = move;
 				break;
 			}
-			int score = minimax(b, other, 1);
+			int score = USE_ALPHA_BETA ? minimax(b, other, 1, Integer.MIN_VALUE, Integer.MAX_VALUE) : minimax(b, other, 1);
 			if (score >= bestScore) {
 				bestScore = score;
 				myNextMove = move;
 			}
 		}
 
+		// Keep track of statistics
 		if (DEBUG) System.out.println("Player " + player + " considered " + considered + " moves.");
+		long elapsedTime = System.nanoTime() - start;
+		totalTime += (double) elapsedTime / 1_000_000_000.0;
+		totalMoves += 1.0;
 		return myNextMove;
 	}
 
@@ -311,17 +379,23 @@ class aiTicTacToe {
 		return board.stream().filter(pos -> pos.state == 0).collect(Collectors.toList());
 	}
 
-	// Initialize agent with depth
-	aiTicTacToe(int setPlayer, int setDepth) {
+	 // Helper function to print out average thinking time
+	void printStats() {
+		System.out.println("Average thinking time (seconds): " + totalTime/totalMoves);
+	}
+
+	// Initialize agent with depth, debug, and pruning method
+	aiTicTacToe(int setPlayer, int setDepth, boolean setDebug, boolean setAlphaBeta) {
 		player = setPlayer;
 		winningLines = initializeWinningLines();
 		MAX_DEPTH = setDepth;
+		DEBUG = setDebug;
+		USE_ALPHA_BETA = setAlphaBeta;
 	}
 
 	// Initialize agent with default depth
 	aiTicTacToe(int setPlayer) {
 		player = setPlayer;
 		winningLines = initializeWinningLines();
-		MAX_DEPTH = 3;
 	}
 }

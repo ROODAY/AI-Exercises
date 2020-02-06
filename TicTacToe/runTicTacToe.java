@@ -19,7 +19,7 @@ public class runTicTacToe {
 		board = createTicTacToeBoard();
 		
 		//initialize AI players
-		ai1 = new aiTicTacToe(1);
+		ai1 = new aiTicTacToe(1, 2, true, true);
 		ai2 = new aiTicTacToeR(2);
 	}
 
@@ -347,6 +347,7 @@ public class runTicTacToe {
 		{
 			//game ends, player 1 wins 
 			System.out.println("Player1 Wins");
+			ai1.printStats();
 			p1Wins++;
 			printBoardTicTacToe(board);
 		}
@@ -354,6 +355,7 @@ public class runTicTacToe {
 		{
 			//game ends, player 1 wins 
 			System.out.println("Player2 Wins");
+			ai1.printStats();
 			p2Wins++;
 			printBoardTicTacToe(board);
 		}
